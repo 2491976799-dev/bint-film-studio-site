@@ -9,6 +9,24 @@
   --max: 1180px;
 }
 
+@property --iris-radius {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 130vmax;
+}
+
+@property --iris-feather {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1.8vmax;
+}
+
+@property --iris-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -18deg;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -77,7 +95,7 @@ button {
 .splash-cover.is-exiting {
   pointer-events: none;
   background: transparent;
-  animation: splashCoverExit 860ms linear both;
+  animation: splashCoverExit 900ms linear both;
 }
 
 .splash-cover::before {
@@ -260,82 +278,100 @@ button {
 }
 
 .splash-shutter {
+  --iris-radius: 130vmax;
+  --iris-feather: 1.8vmax;
+  --iris-angle: -18deg;
   position: absolute;
   inset: 0;
   z-index: 7;
   overflow: hidden;
   opacity: 0;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.04) 0 7vmax,
+      rgba(255, 255, 255, 0.018) 7vmax 16vmax,
+      rgba(0, 0, 0, 0.24) 32vmax,
+      rgba(0, 0, 0, 0.94) 74vmax
+    ),
+    repeating-conic-gradient(
+      from var(--iris-angle) at 50% 50%,
+      #020202 0deg 29deg,
+      #050505 29deg 36deg,
+      #090909 36deg 39deg,
+      #030303 39deg 45deg
+    );
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 0 var(--iris-radius),
+    rgba(0, 0, 0, 0.86) calc(var(--iris-radius) + var(--iris-feather)),
+    #000 calc(var(--iris-radius) + var(--iris-feather) + 0.8vmax)
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 0 var(--iris-radius),
+    rgba(0, 0, 0, 0.86) calc(var(--iris-radius) + var(--iris-feather)),
+    #000 calc(var(--iris-radius) + var(--iris-feather) + 0.8vmax)
+  );
+  pointer-events: none;
+  will-change: opacity, --iris-radius, --iris-angle;
+}
+
+.shutter-aperture-ring,
+.shutter-aperture-glint {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-.shutter-blade {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background:
-    linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.07),
-      rgba(3, 3, 3, 0.94) 18%,
-      var(--dark) 100%
-    );
-  box-shadow: 0 0 48px rgba(0, 0, 0, 0.5);
-  will-change: transform;
-}
-
-.shutter-blade.top {
-  top: 0;
-  transform: translateY(-101%);
-  transform-origin: center bottom;
-}
-
-.shutter-blade.bottom {
-  bottom: 0;
-  background:
-    linear-gradient(
-      to top,
-      rgba(255, 255, 255, 0.06),
-      rgba(3, 3, 3, 0.94) 18%,
-      var(--dark) 100%
-    );
-  transform: translateY(101%);
-  transform-origin: center top;
-}
-
-.shutter-slit {
-  position: absolute;
+.shutter-aperture-ring {
+  left: 50%;
   top: 50%;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.28) 22%,
-    rgba(255, 255, 255, 0.72) 50%,
-    rgba(255, 255, 255, 0.28) 78%,
-    transparent
-  );
+  width: calc(var(--iris-radius) * 2);
+  height: calc(var(--iris-radius) * 2);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  box-shadow:
+    0 0 22px rgba(255, 255, 255, 0.07),
+    inset 0 0 30px rgba(255, 255, 255, 0.05);
   opacity: 0;
-  transform: translateY(-50%) scaleX(0.34);
+  transform: translate(-50%, -50%) rotate(var(--iris-angle));
+  will-change: width, height, opacity, transform;
+}
+
+.shutter-aperture-glint {
+  left: 50%;
+  top: 50%;
+  width: min(34vw, 420px);
+  height: 1px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1) 24%,
+      rgba(255, 255, 255, 0.42) 50%,
+      rgba(255, 255, 255, 0.1) 76%,
+      transparent
+    );
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleX(0.2) rotate(-8deg);
   will-change: opacity, transform;
 }
 
 .splash-cover.is-exiting .splash-shutter {
-  animation: shutterLayer 860ms linear both;
+  animation:
+    shutterLayer 900ms linear both,
+    irisAperture 900ms cubic-bezier(0.78, 0, 0.17, 1) both;
 }
 
-.splash-cover.is-exiting .shutter-blade.top {
-  animation: shutterTop 860ms cubic-bezier(0.78, 0, 0.18, 1) both;
+.splash-cover.is-exiting .shutter-aperture-ring {
+  animation: apertureRing 900ms ease both;
 }
 
-.splash-cover.is-exiting .shutter-blade.bottom {
-  animation: shutterBottom 860ms cubic-bezier(0.78, 0, 0.18, 1) both;
-}
-
-.splash-cover.is-exiting .shutter-slit {
-  animation: shutterSlit 860ms ease both;
+.splash-cover.is-exiting .shutter-aperture-glint {
+  animation: apertureGlint 900ms ease both;
 }
 
 .site-shell {
@@ -1156,8 +1192,8 @@ button {
 
   26% {
     opacity: 1;
-    filter: blur(7px) brightness(1.04);
-    transform: scale(1.008);
+    filter: blur(5.5px) brightness(1.03);
+    transform: scale(1.005);
   }
 
   44% {
@@ -1184,9 +1220,64 @@ button {
     opacity: 0;
   }
 
-  28%,
+  24%,
+  88% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes irisAperture {
+  0%,
+  24% {
+    --iris-radius: 130vmax;
+    --iris-feather: 1.8vmax;
+    --iris-angle: -18deg;
+  }
+
+  40% {
+    --iris-radius: 36vmax;
+    --iris-feather: 1.2vmax;
+    --iris-angle: 8deg;
+  }
+
+  54%,
+  64% {
+    --iris-radius: 0vmax;
+    --iris-feather: 0.2vmax;
+    --iris-angle: 34deg;
+  }
+
+  78% {
+    --iris-radius: 32vmax;
+    --iris-feather: 1.1vmax;
+    --iris-angle: 54deg;
+  }
+
+  100% {
+    --iris-radius: 130vmax;
+    --iris-feather: 1.8vmax;
+    --iris-angle: 76deg;
+  }
+}
+
+@keyframes apertureRing {
+  0%,
+  26% {
+    opacity: 0;
+  }
+
+  40% {
+    opacity: 0.34;
+  }
+
+  54%,
+  64%,
   86% {
-    opacity: 1;
+    opacity: 0;
   }
 
   100% {
@@ -1194,55 +1285,23 @@ button {
   }
 }
 
-@keyframes shutterTop {
+@keyframes apertureGlint {
   0%,
-  28% {
-    transform: translateY(-101%);
-  }
-
-  50%,
-  66% {
-    transform: translateY(0);
-  }
-
-  100% {
-    transform: translateY(-101%);
-  }
-}
-
-@keyframes shutterBottom {
-  0%,
-  28% {
-    transform: translateY(101%);
-  }
-
-  50%,
-  66% {
-    transform: translateY(0);
-  }
-
-  100% {
-    transform: translateY(101%);
-  }
-}
-
-@keyframes shutterSlit {
-  0%,
-  38% {
+  45% {
     opacity: 0;
-    transform: translateY(-50%) scaleX(0.34);
+    transform: translate(-50%, -50%) scaleX(0.2) rotate(-8deg);
   }
 
-  50%,
+  55%,
   62% {
-    opacity: 1;
-    transform: translateY(-50%) scaleX(1);
+    opacity: 0.36;
+    transform: translate(-50%, -50%) scaleX(0.72) rotate(-8deg);
   }
 
-  76%,
+  72%,
   100% {
     opacity: 0;
-    transform: translateY(-50%) scaleX(1.08);
+    transform: translate(-50%, -50%) scaleX(0.26) rotate(-8deg);
   }
 }
 
@@ -1261,8 +1320,8 @@ button {
 
   26% {
     opacity: 1;
-    filter: blur(7px);
-    transform: translate(-50%, -50%) scale(0.992);
+    filter: blur(5.5px);
+    transform: translate(-50%, -50%) scale(0.996);
   }
 
   44% {
