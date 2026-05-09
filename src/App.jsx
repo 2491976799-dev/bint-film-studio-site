@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   aboutLines,
   bloopers,
+  clientLogos,
   services,
   studio,
   works,
@@ -9,6 +10,42 @@ import {
 
 function SplashCover({ onEnter, exiting }) {
   const coverRef = useRef(null);
+  const motionCleanupRef = useRef(null);
+  const motionRequestedRef = useRef(false);
+
+  const applyMotion = ({ shiftX, shiftY, tiltX, tiltY, spotX, spotY }) => {
+    coverRef.current?.style.setProperty("--shift-x", shiftX.toFixed(3));
+    coverRef.current?.style.setProperty("--shift-y", shiftY.toFixed(3));
+    coverRef.current?.style.setProperty("--tilt-x", tiltX.toFixed(3));
+    coverRef.current?.style.setProperty("--tilt-y", tiltY.toFixed(3));
+    coverRef.current?.style.setProperty("--spot-x", spotX);
+    coverRef.current?.style.setProperty("--spot-y", spotY);
+  };
+
+  const installDeviceMotion = () => {
+    if (motionCleanupRef.current || !window.DeviceOrientationEvent) return;
+
+    const updateMotion = (event) => {
+      const beta = Math.max(-24, Math.min(24, event.beta ?? 0));
+      const gamma = Math.max(-24, Math.min(24, event.gamma ?? 0));
+      const shiftX = gamma / 24;
+      const shiftY = beta / 30;
+
+      applyMotion({
+        shiftX,
+        shiftY,
+        tiltX: gamma / 4,
+        tiltY: beta / 6,
+        spotX: `${50 + shiftX * 18}%`,
+        spotY: `${52 + shiftY * 12}%`,
+      });
+    };
+
+    window.addEventListener("deviceorientation", updateMotion, true);
+    motionCleanupRef.current = () => {
+      window.removeEventListener("deviceorientation", updateMotion, true);
+    };
+  };
 
   const updatePointer = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -17,17 +54,61 @@ function SplashCover({ onEnter, exiting }) {
     const shiftX = (x - 50) / 50;
     const shiftY = (y - 50) / 50;
 
-    coverRef.current?.style.setProperty("--spot-x", `${x}%`);
-    coverRef.current?.style.setProperty("--spot-y", `${y}%`);
-    coverRef.current?.style.setProperty("--shift-x", shiftX.toFixed(3));
-    coverRef.current?.style.setProperty("--shift-y", shiftY.toFixed(3));
+    applyMotion({
+      shiftX,
+      shiftY,
+      tiltX: shiftX * 3.6,
+      tiltY: shiftY * 2.8,
+      spotX: `${x}%`,
+      spotY: `${y}%`,
+    });
   };
 
   const resetPointer = () => {
-    coverRef.current?.style.setProperty("--spot-x", "50%");
-    coverRef.current?.style.setProperty("--spot-y", "52%");
-    coverRef.current?.style.setProperty("--shift-x", "0");
-    coverRef.current?.style.setProperty("--shift-y", "0");
+    applyMotion({
+      shiftX: 0,
+      shiftY: 0,
+      tiltX: 0,
+      tiltY: 0,
+      spotX: "50%",
+      spotY: "52%",
+    });
+  };
+
+  useEffect(() => {
+    const orientation = window.DeviceOrientationEvent;
+    if (orientation && !orientation.requestPermission) {
+      installDeviceMotion();
+    }
+
+    return () => {
+      motionCleanupRef.current?.();
+      motionCleanupRef.current = null;
+    };
+  }, []);
+
+  const requestMotionAccess = async (event) => {
+    event?.stopPropagation();
+
+    const orientation = window.DeviceOrientationEvent;
+    if (!orientation || motionCleanupRef.current) return;
+
+    if (orientation?.requestPermission) {
+      if (motionRequestedRef.current) return;
+      motionRequestedRef.current = true;
+
+      try {
+        const result = await orientation.requestPermission();
+        if (result === "granted") {
+          installDeviceMotion();
+        }
+      } catch {
+        motionRequestedRef.current = false;
+      }
+      return;
+    }
+
+    installDeviceMotion();
   };
 
   return (
@@ -35,42 +116,172 @@ function SplashCover({ onEnter, exiting }) {
       ref={coverRef}
       className={`splash-cover${exiting ? " is-exiting" : ""}`}
       aria-label="BINT Film Studio 进入封面"
-      onClick={onEnter}
       onPointerMove={updatePointer}
       onPointerLeave={resetPointer}
+      onPointerDown={requestMotionAccess}
     >
-      <img src={studio.coverImage} alt="" aria-hidden="true" />
-      <div className="arri-frame" aria-hidden="true">
-        <div className="arri-topline">
-          <span className="record-dot" />
-          <span>REC</span>
-          <span>YSWJ / BINT FILM STUDIO</span>
-          <span>00:00:00:00</span>
-        </div>
-        <div className="arri-safe-frame" />
-        <div className="arri-crosshair" />
-        <div className="arri-bottomline">
-          <span>ALEXA 35</span>
-          <span>4.6K OPEN GATE</span>
-          <span>25 FPS</span>
-          <span>180.0°</span>
-          <span>EI 800</span>
-          <span>WB 5600K</span>
-        </div>
+      <img className="cover-background" src={studio.coverImage} alt="" aria-hidden="true" />
+      <div className="splash-burst" aria-hidden="true">
+        {["top-left", "top-right", "bottom-left", "bottom-right"].map((part) => (
+          <span
+            className={`splash-shard ${part}`}
+            style={{ "--cover-image": `url(${studio.coverImage})` }}
+            key={part}
+          />
+        ))}
       </div>
-      <div className="cover-scanline" aria-hidden="true" />
+      <button
+        className="splash-lockup"
+        type="button"
+        aria-label={`${studio.mark} ${studio.name}`}
+        onClick={requestMotionAccess}
+      >
+        <img src={studio.coverLockup} alt="" aria-hidden="true" />
+      </button>
       <button
         className="enter-button"
         type="button"
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
           onEnter();
         }}
       >
-        进入官网 <span>Enter Site</span>
+        进入网页 <span>Enter Site</span>
       </button>
     </section>
   );
+}
+
+function copyTextToClipboard(text, onSuccess, onError) {
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(onError);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    document.execCommand("copy");
+    onSuccess();
+  } catch {
+    onError();
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
+
+function useAutoScroller(defaultSpeed = 0.7) {
+  const railRef = useRef(null);
+  const targetSpeedRef = useRef(defaultSpeed);
+  const currentSpeedRef = useRef(defaultSpeed);
+  const initializedRef = useRef(false);
+
+  const getLoopWidth = () => {
+    const rail = railRef.current;
+    const baseSet = rail?.querySelector('[data-loop-set="base"]');
+    if (!rail || !baseSet) return 0;
+
+    const styles = window.getComputedStyle(rail);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    return baseSet.getBoundingClientRect().width + gap;
+  };
+
+  const normalizeLoopPosition = () => {
+    const rail = railRef.current;
+    const loopWidth = getLoopWidth();
+    if (!rail || loopWidth <= 0) return;
+
+    if (!initializedRef.current) {
+      rail.scrollLeft = loopWidth;
+      initializedRef.current = true;
+      return;
+    }
+
+    if (rail.scrollLeft < loopWidth * 0.5) {
+      rail.scrollLeft += loopWidth;
+    } else if (rail.scrollLeft >= loopWidth * 1.5) {
+      rail.scrollLeft -= loopWidth;
+    }
+  };
+
+  useEffect(() => {
+    let frameId = 0;
+    let lastTime = performance.now();
+    let resizeFrameId = 0;
+
+    const resetLoop = () => {
+      initializedRef.current = false;
+      cancelAnimationFrame(resizeFrameId);
+      resizeFrameId = requestAnimationFrame(normalizeLoopPosition);
+    };
+
+    const tick = (time) => {
+      const rail = railRef.current;
+      if (rail) {
+        const delta = Math.min(32, time - lastTime);
+
+        normalizeLoopPosition();
+
+        if (rail.scrollWidth > rail.clientWidth) {
+          currentSpeedRef.current +=
+            (targetSpeedRef.current - currentSpeedRef.current) * 0.045;
+          rail.scrollLeft += currentSpeedRef.current * delta;
+          normalizeLoopPosition();
+        }
+      }
+
+      lastTime = time;
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    window.addEventListener("resize", resetLoop);
+    return () => {
+      cancelAnimationFrame(frameId);
+      cancelAnimationFrame(resizeFrameId);
+      window.removeEventListener("resize", resetLoop);
+    };
+  }, []);
+
+  const onPointerMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = (event.clientX - rect.left) / rect.width;
+    const centered = (ratio - 0.5) * 2;
+    const direction = Math.abs(centered) < 0.2 ? 0 : Math.sign(centered);
+    const speed = defaultSpeed * 0.35 + Math.abs(centered) * defaultSpeed * 2.2;
+    targetSpeedRef.current = direction === 0 ? defaultSpeed * 0.18 : direction * speed;
+  };
+
+  const onPointerLeave = () => {
+    targetSpeedRef.current = defaultSpeed;
+  };
+
+  const scrollRail = (direction) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    normalizeLoopPosition();
+    targetSpeedRef.current = direction * defaultSpeed * 1.8;
+    rail.scrollBy({
+      left: direction * Math.max(rail.clientWidth * 0.48, 220),
+      behavior: "smooth",
+    });
+  };
+
+  return {
+    railRef,
+    railProps: {
+      onPointerMove,
+      onPointerLeave,
+    },
+    scrollRail,
+  };
 }
 
 function NavBar() {
@@ -138,28 +349,124 @@ function Services() {
   );
 }
 
+function ClientLogoSphere() {
+  const [angle, setAngle] = useState(0);
+  const targetSpeedRef = useRef(0.00034);
+  const currentSpeedRef = useRef(0.00034);
+  const frameRef = useRef(0);
+  const count = clientLogos.length;
+
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    const tick = (time) => {
+      const delta = Math.min(32, time - lastTime);
+      currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * 0.026;
+      setAngle((current) => current + currentSpeedRef.current * delta);
+      lastTime = time;
+      frameRef.current = requestAnimationFrame(tick);
+    };
+
+    frameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, []);
+
+  const updateSpeed = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const ratio = (event.clientX - rect.left) / rect.width;
+    const centered = (ratio - 0.5) * 2;
+    const direction = Math.abs(centered) < 0.22 ? 0 : Math.sign(centered);
+    const speed = 0.00012 + Math.abs(centered) * 0.00062;
+    targetSpeedRef.current = direction === 0 ? 0.00012 : direction * speed;
+  };
+
+  const resetSpeed = () => {
+    targetSpeedRef.current = 0.00034;
+  };
+
+  const items = clientLogos
+    .map((logo, index) => {
+      const lanes = [-0.64, -0.34, -0.06, 0.24, 0.55];
+      const lane = index % lanes.length;
+      const lanePosition = Math.floor(index / lanes.length);
+      const laneItems = Math.ceil((count - lane) / lanes.length);
+      const y = lanes[lane] + Math.sin(index * 1.93) * 0.026;
+      const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
+      const theta = (lanePosition / laneItems) * Math.PI * 2 + lane * 0.74;
+      const baseX = Math.cos(theta) * radiusAtY;
+      const baseZ = Math.sin(theta) * radiusAtY;
+      const rotatedX = baseX * Math.cos(angle) + baseZ * Math.sin(angle);
+      const rotatedZ = baseZ * Math.cos(angle) - baseX * Math.sin(angle);
+      const verticalDrift = Math.sin(angle * 0.46 + index * 1.41) * 1.55;
+      const depthLift = rotatedZ * 1.85;
+      const projectedX = rotatedX * 35;
+      const projectedY = y * 28 + verticalDrift + depthLift;
+      const edgeFade = Math.max(0, 1 - Math.abs(rotatedX));
+      const frontVisibility = rotatedZ <= -0.08 ? 0 : Math.min(1, (rotatedZ + 0.08) / 0.42);
+      const opacity = Math.min(1, (0.3 + Math.pow(edgeFade, 1.35) * 0.7) * frontVisibility);
+      const depthScale = 0.84 + Math.max(0, rotatedZ) * 0.18;
+      const logoScale = depthScale * (logo.size ?? 1) * 1.15;
+      const widthMap = {
+        hero: "clamp(184px, 20vw, 292px)",
+        wide: "clamp(148px, 16vw, 224px)",
+        medium: "clamp(126px, 14vw, 196px)",
+        tall: "clamp(112px, 12vw, 174px)",
+      };
+      const maxHeightMap = {
+        hero: "clamp(72px, 8vw, 112px)",
+        wide: "clamp(54px, 6vw, 86px)",
+        medium: "clamp(54px, 6vw, 86px)",
+        tall: "clamp(64px, 7vw, 96px)",
+      };
+
+      return {
+        ...logo,
+        key: logo.name,
+        z: rotatedZ,
+        style: {
+          "--logo-x": `${projectedX}%`,
+          "--logo-y": `${projectedY}%`,
+          "--logo-scale": logoScale.toFixed(3),
+          "--logo-opacity": opacity.toFixed(3),
+          "--logo-z": Math.round((rotatedZ + 1) * 100),
+          "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
+          "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
+        },
+      };
+    })
+    .sort((a, b) => a.z - b.z);
+
+  return (
+    <div
+      className="client-sphere"
+      aria-label="合作客户 Logo 球形展廊"
+      onPointerMove={updateSpeed}
+      onPointerLeave={resetSpeed}
+    >
+      <div className="sphere-core" aria-hidden="true" />
+      {items.map((logo) => (
+        <figure className="sphere-logo" key={logo.key} style={logo.style}>
+          <img src={logo.src} alt={logo.name} loading="lazy" />
+        </figure>
+      ))}
+    </div>
+  );
+}
+
 function Clients() {
   return (
     <section className="clients" id="clients" aria-labelledby="clients-title">
       <div className="texture texture-white top" aria-hidden="true" />
       <SectionTitle kicker="CLIENTS" title="合作客户" />
-      <div className="client-image">
-        <img src={studio.clientsImage} alt="BINT Film Studio 合作客户标识墙" loading="lazy" />
-      </div>
+      <ClientLogoSphere />
       <p className="copyright">©BINT FILM STUDIO</p>
     </section>
   );
 }
 
 function SelectedWorks() {
-  const railRef = useRef(null);
-
-  const scrollRail = (direction) => {
-    railRef.current?.scrollBy({
-      left: direction * Math.max(railRef.current.clientWidth * 0.82, 360),
-      behavior: "smooth",
-    });
-  };
+  const { railRef, railProps, scrollRail } = useAutoScroller(0.18);
+  const loopCopies = [-1, 0, 1];
 
   return (
     <section className="works-section" id="works">
@@ -175,12 +482,21 @@ function SelectedWorks() {
           </button>
         </div>
       </div>
-      <div className="works-rail" ref={railRef} aria-label="横向作品展廊">
-        {works.map((work, index) => (
-          <figure className="work-card" key={work.src}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <img src={work.src} alt={work.alt} loading="lazy" />
-          </figure>
+      <div className="works-rail auto-rail" ref={railRef} aria-label="横向作品展廊" {...railProps}>
+        {loopCopies.map((copy) => (
+          <div
+            className="rail-loop-set"
+            data-loop-set={copy === 0 ? "base" : undefined}
+            aria-hidden={copy === 0 ? undefined : true}
+            key={copy}
+          >
+            {works.map((work, index) => (
+              <figure className="work-card" key={`${copy}-${work.src}`}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <img src={work.src} alt={work.alt} loading="lazy" />
+              </figure>
+            ))}
+          </div>
         ))}
       </div>
     </section>
@@ -188,16 +504,38 @@ function SelectedWorks() {
 }
 
 function Bloopers() {
+  const { railRef, railProps, scrollRail } = useAutoScroller(0.14);
+  const loopCopies = [-1, 0, 1];
+
   return (
     <section className="bloopers-section" id="bloopers">
       <div className="texture texture-right bottom" aria-hidden="true" />
-      <SectionTitle kicker="WORK BLOOPERS" title="工作花絮" />
-      <div className="blooper-grid">
-        {bloopers.map((item, index) => (
-          <figure key={item.src}>
-            <img src={item.src} alt={item.alt} loading="lazy" />
-            <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
-          </figure>
+      <div className="works-heading">
+        <SectionTitle kicker="WORK BLOOPERS" title="工作花絮" align="left" />
+        <div className="rail-actions" aria-label="花絮展廊控制">
+          <button type="button" onClick={() => scrollRail(-1)} aria-label="上一组花絮">
+            ←
+          </button>
+          <button type="button" onClick={() => scrollRail(1)} aria-label="下一组花絮">
+            →
+          </button>
+        </div>
+      </div>
+      <div className="blooper-rail auto-rail" ref={railRef} aria-label="横向工作花絮展廊" {...railProps}>
+        {loopCopies.map((copy) => (
+          <div
+            className="rail-loop-set"
+            data-loop-set={copy === 0 ? "base" : undefined}
+            aria-hidden={copy === 0 ? undefined : true}
+            key={copy}
+          >
+            {bloopers.map((item, index) => (
+              <figure key={`${copy}-${item.src}`}>
+                <img src={item.src} alt={item.alt} loading="lazy" />
+                <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
+              </figure>
+            ))}
+          </div>
         ))}
       </div>
       <p className="copyright">©BINT FILM STUDIO</p>
@@ -205,24 +543,98 @@ function Bloopers() {
   );
 }
 
-function Contact() {
+function FloatingContact() {
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const copyWechat = async () => {
-    try {
-      await navigator.clipboard.writeText(studio.wechat);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      setCopied(false);
-    }
+  const copyWechat = () => {
+    copyTextToClipboard(
+      studio.wechat,
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1600);
+      },
+      () => setCopied(false),
+    );
   };
 
   return (
-    <section className="contact-section" id="contact">
+    <aside className={`floating-contact${open ? " is-open" : ""}`} aria-label="快速联系">
+      <button
+        className="floating-contact-trigger"
+        type="button"
+        aria-expanded={open}
+        aria-label="打开快速联系"
+        onClick={() => setOpen((current) => !current)}
+      >
+        <svg
+          className="chat-bubble-icon"
+          viewBox="0 0 32 32"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path d="M8.7 23.4 5.5 26c-.38.31-.94 0-.85-.48l.76-4.1A10.1 10.1 0 0 1 3.5 15.5C3.5 9.15 9.1 4 16 4s12.5 5.15 12.5 11.5S22.9 27 16 27a13.9 13.9 0 0 1-7.3-3.6Z" />
+          <path className="chat-dot" d="M11.2 15.8h.01M16 15.8h.01M20.8 15.8h.01" />
+        </svg>
+      </button>
+      <div className="floating-contact-panel">
+        <a href={`tel:${studio.phone}`}>
+          <span>TEL</span>
+          <strong>{studio.phone}</strong>
+        </a>
+        <button type="button" onClick={copyWechat}>
+          <span>WECHAT</span>
+          <strong>{studio.wechat}</strong>
+          <em>{copied ? "已复制" : "复制"}</em>
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function Contact() {
+  const [copied, setCopied] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node || !window.IntersectionObserver) {
+      setVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setVisible(entry.isIntersecting);
+      },
+      { threshold: 0.32 },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const copyWechat = async () => {
+    copyTextToClipboard(
+      studio.wechat,
+      () => {
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1600);
+      },
+      () => setCopied(false),
+    );
+  };
+
+  return (
+    <section
+      className={`contact-section${visible ? " is-visible" : ""}`}
+      id="contact"
+      ref={sectionRef}
+    >
       <div className="contact-inner">
         <h2>喜欢您来。</h2>
-        <div className="contact-list">
+        <div className="contact-list contact-details">
           <a href={`tel:${studio.phone}`}>TEL: {studio.phone}</a>
           <button type="button" onClick={copyWechat}>
             WECHAT: {studio.wechat}
@@ -243,11 +655,11 @@ export default function App() {
   const [splashExiting, setSplashExiting] = useState(false);
 
   const enterSite = () => {
-    if (entered) return;
-    setEntered(true);
+    if (entered || splashExiting) return;
     setSplashExiting(true);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-    window.setTimeout(() => setShowSplash(false), 560);
+    window.setTimeout(() => setEntered(true), 560);
+    window.setTimeout(() => setShowSplash(false), 820);
   };
 
   return (
@@ -264,6 +676,7 @@ export default function App() {
           <Contact />
         </main>
       </div>
+      {entered && <FloatingContact />}
     </>
   );
 }
