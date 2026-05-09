@@ -1,25 +1,40 @@
 import coverImage from "../assets/cover/pdf-home-static.webp";
 import coverLockup from "../assets/cover/yswj-lockup.png";
 
-import asianGamesLogo from "../assets/client-logo-crops/asian-games.png";
-import cctvLogo from "../assets/client-logo-crops/cctv.png";
-import changanLogo from "../assets/client-logo-crops/changan-auto.png";
-import chinaMobileLogo from "../assets/client-logo-crops/china-mobile.png";
-import chinaTelecomLogo from "../assets/client-logo-crops/china-telecom.png";
-import chongqingDailyLogo from "../assets/client-logo-crops/chongqing-daily.png";
-import cmgLogo from "../assets/client-logo-crops/cmg.png";
-import crecLogo from "../assets/client-logo-crops/crec.png";
-import deepalLogo from "../assets/client-logo-crops/deepal.png";
-import djiLogo from "../assets/client-logo-crops/dji.png";
-import hospitalLogo from "../assets/client-logo-crops/hospital.png";
-import jaguarLogo from "../assets/client-logo-crops/jaguar.png";
-import landRoverLogo from "../assets/client-logo-crops/land-rover.png";
-import nisiLogo from "../assets/client-logo-crops/nisi.png";
-import sandiskLogo from "../assets/client-logo-crops/sandisk.png";
-import sisuoneLogo from "../assets/client-logo-crops/sisuone.png";
-import sonyLogo from "../assets/client-logo-crops/sony.png";
-import yangshipinLogo from "../assets/client-logo-crops/yangshipin.png";
-import zeekrLogo from "../assets/client-logo-crops/zeekr.png";
+const clientLogoSources = Object.entries(
+  import.meta.glob("../assets/client-logo-crops/logo-*.png", {
+    eager: true,
+    import: "default",
+  }),
+)
+  .sort(([left], [right]) => left.localeCompare(right))
+  .map(([, src]) => src);
+
+const clientLogoMeta = [
+  { name: "长安汽车", size: 1.08, shape: "hero" },
+  { name: "凤凰网", size: 0.98, shape: "wide" },
+  { name: "重庆机场集团", size: 1.08, shape: "hero" },
+  { name: "中国电信", size: 1.02, shape: "wide" },
+  { name: "DJI", size: 1.04, shape: "wide" },
+  { name: "重庆医科大学附属第二医院", size: 1.14, shape: "hero" },
+  { name: "重庆大学", size: 1.06, shape: "wide" },
+  { name: "宁德时代", size: 1.02, shape: "wide" },
+  { name: "路虎", size: 0.98, shape: "medium" },
+  { name: "NiSi", size: 0.9, shape: "medium" },
+  { name: "中央广播电视总台", size: 1.1, shape: "hero" },
+  { name: "SONY", size: 0.92, shape: "wide" },
+  { name: "深蓝汽车", size: 1, shape: "wide" },
+  { name: "极氪", size: 1, shape: "wide" },
+  { name: "中国中央电视台", size: 0.96, shape: "medium" },
+  { name: "中国中铁", size: 0.98, shape: "tall" },
+  { name: "中国移动", size: 1, shape: "wide" },
+  { name: "SanDisk", size: 0.98, shape: "wide" },
+  { name: "捷豹", size: 1, shape: "wide" },
+  { name: "央视频", size: 1, shape: "wide" },
+  { name: "重庆日报报业集团", size: 1.04, shape: "medium" },
+  { name: "重庆交通大学", size: 1.06, shape: "wide" },
+  { name: "阿里云", size: 1, shape: "wide" },
+];
 
 import work01 from "../assets/works-selected/work-01.webp";
 import work02 from "../assets/works-selected/work-02.webp";
@@ -37,9 +52,9 @@ import work13 from "../assets/works-selected/work-13.webp";
 import work14 from "../assets/works-selected/work-14.webp";
 import work15 from "../assets/works-selected/work-15.webp";
 
+import blooper01 from "../assets/bloopers/blooper-01.webp";
 import blooper02 from "../assets/bloopers/blooper-02.webp";
 import blooper03 from "../assets/bloopers/blooper-03.webp";
-import blooper04 from "../assets/bloopers/blooper-04.webp";
 
 export const studio = {
   coverImage,
@@ -74,27 +89,12 @@ export const services = [
   "官媒投放",
 ];
 
-export const clientLogos = [
-  { name: "中国电信", src: chinaTelecomLogo, size: 1.02, shape: "wide" },
-  { name: "中国中央电视台", src: cctvLogo, size: 0.96, shape: "medium" },
-  { name: "中央广播电视总台", src: cmgLogo, size: 0.98, shape: "medium" },
-  { name: "央视频", src: yangshipinLogo, size: 1, shape: "wide" },
-  { name: "中国移动", src: chinaMobileLogo, size: 1, shape: "wide" },
-  { name: "杭州亚运会", src: asianGamesLogo, size: 1.08, shape: "hero" },
-  { name: "中国中铁", src: crecLogo, size: 0.98, shape: "tall" },
-  { name: "重庆日报报业集团", src: chongqingDailyLogo, size: 1.04, shape: "medium" },
-  { name: "重庆医科大学附属第二医院", src: hospitalLogo, size: 1.14, shape: "hero" },
-  { name: "深蓝汽车", src: deepalLogo, size: 1, shape: "wide" },
-  { name: "路虎", src: landRoverLogo, size: 0.98, shape: "medium" },
-  { name: "长安汽车", src: changanLogo, size: 1.08, shape: "hero" },
-  { name: "捷豹", src: jaguarLogo, size: 1, shape: "wide" },
-  { name: "极氪", src: zeekrLogo, size: 1, shape: "wide" },
-  { name: "SisuOne", src: sisuoneLogo, size: 1, shape: "wide" },
-  { name: "SONY", src: sonyLogo, size: 0.92, shape: "wide" },
-  { name: "DJI", src: djiLogo, size: 1.04, shape: "wide" },
-  { name: "NiSi", src: nisiLogo, size: 0.9, shape: "medium" },
-  { name: "SanDisk", src: sandiskLogo, size: 0.98, shape: "wide" },
-];
+export const clientLogos = clientLogoSources.map((src, index) => ({
+  src,
+  name: clientLogoMeta[index]?.name ?? `合作客户 ${String(index + 1).padStart(2, "0")}`,
+  size: clientLogoMeta[index]?.size ?? 1,
+  shape: clientLogoMeta[index]?.shape ?? "wide",
+}));
 
 export const works = [
   work01,
@@ -117,7 +117,7 @@ export const works = [
   alt: `BINT 部分作品展示 ${String(index + 1).padStart(2, "0")}`,
 }));
 
-export const bloopers = [blooper02, blooper03, blooper04].map((src, index) => ({
+export const bloopers = [blooper01, blooper02, blooper03].map((src, index) => ({
   src,
   alt: `BINT 工作花絮 ${String(index + 1).padStart(2, "0")}`,
 }));

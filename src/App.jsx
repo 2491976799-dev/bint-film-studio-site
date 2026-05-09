@@ -204,9 +204,9 @@ function useAutoScroller(defaultSpeed = 0.7) {
       return;
     }
 
-    if (rail.scrollLeft < loopWidth * 0.5) {
+    if (rail.scrollLeft <= loopWidth * 0.02) {
       rail.scrollLeft += loopWidth;
-    } else if (rail.scrollLeft >= loopWidth * 1.5) {
+    } else if (rail.scrollLeft >= loopWidth * 1.98) {
       rail.scrollLeft -= loopWidth;
     }
   };
@@ -384,10 +384,9 @@ function Services() {
 
 function ClientLogoSphere() {
   const [angle, setAngle] = useState(0);
-  const targetSpeedRef = useRef(0.00034);
-  const currentSpeedRef = useRef(0.00034);
+  const targetSpeedRef = useRef(-0.00034);
+  const currentSpeedRef = useRef(-0.00034);
   const frameRef = useRef(0);
-  const count = clientLogos.length;
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -408,66 +407,75 @@ function ClientLogoSphere() {
     const rect = event.currentTarget.getBoundingClientRect();
     const ratio = (event.clientX - rect.left) / rect.width;
     const centered = (ratio - 0.5) * 2;
-    const direction = Math.abs(centered) < 0.22 ? 0 : Math.sign(centered);
-    const speed = 0.00012 + Math.abs(centered) * 0.00062;
-    targetSpeedRef.current = direction === 0 ? 0.00012 : direction * speed;
+    const speed = 0.00012 + Math.abs(centered) * 0.00036;
+    targetSpeedRef.current = -speed;
   };
 
   const resetSpeed = () => {
-    targetSpeedRef.current = 0.00034;
+    targetSpeedRef.current = -0.00034;
   };
 
-  const items = clientLogos
-    .map((logo, index) => {
-      const lanes = [-0.64, -0.34, -0.06, 0.24, 0.55];
-      const lane = index % lanes.length;
-      const lanePosition = Math.floor(index / lanes.length);
-      const laneItems = Math.ceil((count - lane) / lanes.length);
-      const y = lanes[lane] + Math.sin(index * 1.93) * 0.026;
-      const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
-      const theta = (lanePosition / laneItems) * Math.PI * 2 + lane * 0.74;
-      const baseX = Math.cos(theta) * radiusAtY;
-      const baseZ = Math.sin(theta) * radiusAtY;
-      const rotatedX = baseX * Math.cos(angle) + baseZ * Math.sin(angle);
-      const rotatedZ = baseZ * Math.cos(angle) - baseX * Math.sin(angle);
-      const verticalDrift = Math.sin(angle * 0.46 + index * 1.41) * 1.55;
-      const depthLift = rotatedZ * 1.85;
-      const projectedX = rotatedX * 35;
-      const projectedY = y * 28 + verticalDrift + depthLift;
-      const edgeFade = Math.max(0, 1 - Math.abs(rotatedX));
-      const frontVisibility = rotatedZ <= -0.08 ? 0 : Math.min(1, (rotatedZ + 0.08) / 0.42);
-      const opacity = Math.min(1, (0.3 + Math.pow(edgeFade, 1.35) * 0.7) * frontVisibility);
-      const depthScale = 0.84 + Math.max(0, rotatedZ) * 0.18;
-      const logoScale = depthScale * (logo.size ?? 1) * 1.035;
-      const widthMap = {
-        hero: "clamp(184px, 20vw, 292px)",
-        wide: "clamp(148px, 16vw, 224px)",
-        medium: "clamp(126px, 14vw, 196px)",
-        tall: "clamp(112px, 12vw, 174px)",
-      };
-      const maxHeightMap = {
-        hero: "clamp(72px, 8vw, 112px)",
-        wide: "clamp(54px, 6vw, 86px)",
-        medium: "clamp(54px, 6vw, 86px)",
-        tall: "clamp(64px, 7vw, 96px)",
-      };
+  const latitudeRows = [
+    { y: -35, radius: 0.74, phase: 0.08, logos: [9, 11, 17, 13, 4] },
+    { y: -13, radius: 0.96, phase: 0.42, logos: [3, 10, 14, 16, 19, 20] },
+    { y: 11, radius: 1, phase: 0.12, logos: [0, 8, 15, 18, 7, 12] },
+    { y: 35, radius: 0.78, phase: 0.34, logos: [2, 5, 6, 21, 22, 1] },
+  ];
 
-      return {
-        ...logo,
-        key: logo.name,
-        z: rotatedZ,
-        style: {
-          "--logo-x": `${projectedX}%`,
-          "--logo-y": `${projectedY}%`,
-          "--logo-scale": logoScale.toFixed(3),
-          "--logo-opacity": opacity.toFixed(3),
-          "--logo-z": Math.round((rotatedZ + 1) * 100),
-          "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
-          "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
-        },
-      };
-    })
-    .sort((a, b) => a.z - b.z);
+  const smoothStep = (start, end, value) => {
+    const progress = Math.min(1, Math.max(0, (value - start) / (end - start)));
+    return progress * progress * (3 - 2 * progress);
+  };
+
+  const widthMap = {
+    hero: "clamp(190px, 20vw, 300px)",
+    wide: "clamp(156px, 16.5vw, 230px)",
+    medium: "clamp(134px, 14.5vw, 200px)",
+    tall: "clamp(120px, 13vw, 184px)",
+  };
+  const maxHeightMap = {
+    hero: "clamp(72px, 8.1vw, 112px)",
+    wide: "clamp(56px, 6.2vw, 88px)",
+    medium: "clamp(56px, 6.2vw, 88px)",
+    tall: "clamp(64px, 7vw, 100px)",
+  };
+
+  const items = latitudeRows.flatMap((row, rowIndex) => {
+    return row.logos
+      .map((logoIndex, position) => {
+        const logo = clientLogos[logoIndex];
+
+        if (!logo) {
+          return null;
+        }
+
+        const theta = angle + row.phase * Math.PI * 2 + (position / row.logos.length) * Math.PI * 2;
+        const baseX = Math.cos(theta) * row.radius;
+        const depth = Math.sin(theta) * row.radius;
+        const projectedX = baseX * 40;
+        const projectedY = row.y;
+        const edgeFade = Math.max(0, 1 - Math.abs(baseX) * 0.18);
+        const frontFade = smoothStep(-0.36, 0.42, depth);
+        const opacity = Math.min(1, edgeFade * frontFade);
+        const logoScale = (logo.size ?? 1) * (0.96 + Math.max(0, depth) * 0.18);
+
+        return {
+          ...logo,
+          key: `${logo.name}-${rowIndex}-${position}`,
+          style: {
+            "--logo-x": `${projectedX}%`,
+            "--logo-y": `${projectedY}%`,
+            "--logo-depth": `${Math.round(depth * 78)}px`,
+            "--logo-scale": logoScale.toFixed(3),
+            "--logo-opacity": opacity.toFixed(3),
+            "--logo-z": Math.round(100 + (depth + 1) * 40 + (4 - rowIndex)),
+            "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
+            "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
+          },
+        };
+      })
+      .filter(Boolean);
+  });
 
   return (
     <div
@@ -538,9 +546,9 @@ function SelectedWorks() {
                 <img
                   src={work.src}
                   alt={work.alt}
-                  loading={copy === 0 ? "eager" : "lazy"}
+                  loading="eager"
                   decoding="async"
-                  fetchPriority={copy === 0 && index < 3 ? "high" : "auto"}
+                  fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
                 />
               </figure>
             ))}
