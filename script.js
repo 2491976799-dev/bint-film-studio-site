@@ -1,5 +1,8 @@
 const header = document.querySelector("[data-header]");
 const revealItems = document.querySelectorAll(".reveal");
+const worksRail = document.querySelector("[data-works-rail]");
+const prevButton = document.querySelector("[data-rail-prev]");
+const nextButton = document.querySelector("[data-rail-next]");
 
 const setHeaderState = () => {
   header?.classList.toggle("is-scrolled", window.scrollY > 24);
@@ -21,3 +24,14 @@ const revealObserver = new IntersectionObserver(
 );
 
 revealItems.forEach((item) => revealObserver.observe(item));
+
+const scrollWorks = (direction) => {
+  if (!worksRail) return;
+  worksRail.scrollBy({
+    left: direction * Math.max(worksRail.clientWidth * 0.82, 320),
+    behavior: "smooth",
+  });
+};
+
+prevButton?.addEventListener("click", () => scrollWorks(-1));
+nextButton?.addEventListener("click", () => scrollWorks(1));

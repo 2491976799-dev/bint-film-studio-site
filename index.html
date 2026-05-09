@@ -27,9 +27,10 @@
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-bg" role="img" aria-label="BINT有神無迹影视品牌视觉"></div>
-        <div class="hero-content reveal">
-          <p class="eyebrow">重庆影视内容解决方案</p>
+        <div class="hero-orb hero-orb-a" aria-hidden="true"></div>
+        <div class="hero-orb hero-orb-b" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">BINT FILM STUDIO · CHONGQING</p>
           <h1 id="hero-title">BINT有神無迹影视</h1>
           <p class="hero-copy">
             以山城为原点，用可靠交付与创新执行力，帮助品牌故事精准触达受众。
@@ -39,29 +40,27 @@
             <a class="button button-light" href="#contact">预约沟通</a>
           </div>
         </div>
-        <div class="hero-meta reveal">
+        <div class="hero-signature" aria-label="团队信息">
           <span>Founded 2019</span>
           <span>Professional upgrade 2023</span>
-          <span>© BINT Film Studio</span>
+          <span>Full-cycle production</span>
         </div>
       </section>
 
       <section class="section about" id="about" aria-labelledby="about-title">
-        <div class="section-kicker">ABOUT</div>
-        <div class="about-grid">
-          <div>
-            <h2 id="about-title">热浪吹拂，无限进步</h2>
-          </div>
-          <div class="about-copy reveal">
+        <p class="section-kicker">ABOUT</p>
+        <div class="intro-grid">
+          <h2 id="about-title">热浪吹拂，<br />无限进步。</h2>
+          <div class="intro-copy reveal">
             <p>
               BINT FILM STUDIO 有神無迹影视，2019 年创立于重庆，2023 年完成专业化升级。团队集结资深导演、摄影团队，配备先进制作设备与全流程协作资源。
             </p>
             <p>
-              我们专注为客户提供高质量影视内容解决方案，坚持用专业态度打磨作品，并凭借与各领域头部客户的合作持续积累行业口碑。
+              我们专注为客户提供高质量影视内容解决方案，坚持用专业态度打磨作品，并凭借与各领域头部客户的成功合作持续积累行业口碑。
             </p>
           </div>
         </div>
-        <div class="stats reveal" aria-label="团队优势">
+        <div class="metrics reveal" aria-label="团队优势">
           <div>
             <strong>2019</strong>
             <span>创立于重庆</span>
@@ -82,33 +81,33 @@
           <p class="section-kicker">SERVICES</p>
           <h2 id="services-title">主营业务</h2>
         </div>
-        <div class="service-grid">
-          <article class="service-card reveal">
+        <div class="service-list">
+          <article class="service-item reveal">
             <span>01</span>
             <h3>TVC广告片</h3>
             <p>为品牌、产品与活动打造高完成度商业影像。</p>
           </article>
-          <article class="service-card reveal">
+          <article class="service-item reveal">
             <span>02</span>
             <h3>企业 / 产品 / 品牌宣传片</h3>
             <p>梳理核心信息，用影像表达企业价值与产品亮点。</p>
           </article>
-          <article class="service-card reveal">
+          <article class="service-item reveal">
             <span>03</span>
             <h3>纪录片 / 微电影</h3>
             <p>用叙事与镜头语言沉淀人物、事件和品牌故事。</p>
           </article>
-          <article class="service-card reveal">
+          <article class="service-item reveal">
             <span>04</span>
             <h3>短视频录制 / 代运营</h3>
             <p>适配平台节奏，支持内容生产与账号持续运营。</p>
           </article>
-          <article class="service-card reveal">
+          <article class="service-item reveal">
             <span>05</span>
             <h3>会议课程 / 直播录制</h3>
             <p>覆盖活动记录、课程影像、直播执行与素材整理。</p>
           </article>
-          <article class="service-card reveal">
+          <article class="service-item reveal">
             <span>06</span>
             <h3>AIGC制作 / 官媒投放</h3>
             <p>结合新技术与媒体资源，拓展内容生产和传播效率。</p>
@@ -117,7 +116,7 @@
       </section>
 
       <section class="section clients" aria-labelledby="clients-title">
-        <div class="split-heading">
+        <div class="section-heading">
           <p class="section-kicker">CLIENTS</p>
           <h2 id="clients-title">合作客户与项目覆盖</h2>
         </div>
@@ -126,13 +125,76 @@
         </div>
       </section>
 
-      <section class="section works" id="works" aria-labelledby="works-title">
-        <div class="section-heading">
-          <p class="section-kicker">PARTIAL WORKS DISPLAY</p>
+      <section class="works" id="works" aria-labelledby="works-title">
+        <div class="works-head">
+          <p class="section-kicker">SELECTED WORKS</p>
           <h2 id="works-title">部分作品展示</h2>
+          <p>
+            横向浏览独立作品画面，保留原始影像内容，以更接近官网级作品集的方式呈现。
+          </p>
         </div>
-        <div class="works-showcase reveal">
-          <img src="assets/web/works.webp" alt="BINT Film Studio 部分作品画面合集" loading="lazy" />
+        <div class="rail-controls" aria-label="作品展廊控制">
+          <button class="rail-button" type="button" data-rail-prev aria-label="上一张作品">‹</button>
+          <button class="rail-button" type="button" data-rail-next aria-label="下一张作品">›</button>
+        </div>
+        <div class="works-rail" data-works-rail aria-label="横向作品展廊">
+          <figure class="work-card portrait">
+            <img src="assets/works/portrait-01.webp" alt="BINT 作品展示 01" loading="lazy" />
+          </figure>
+          <figure class="work-card portrait">
+            <img src="assets/works/portrait-02.webp" alt="BINT 作品展示 02" loading="lazy" />
+          </figure>
+          <figure class="work-card portrait">
+            <img src="assets/works/portrait-03.webp" alt="BINT 作品展示 03" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-04.webp" alt="BINT 作品展示 04" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-05.webp" alt="BINT 作品展示 05" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-06.webp" alt="BINT 作品展示 06" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-07.webp" alt="BINT 作品展示 07" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-08.webp" alt="BINT 作品展示 08" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-09.webp" alt="BINT 作品展示 09" loading="lazy" />
+          </figure>
+          <figure class="work-card portrait">
+            <img src="assets/works/portrait-10.webp" alt="BINT 作品展示 10" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-11.webp" alt="BINT 作品展示 11" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-12.webp" alt="BINT 作品展示 12" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-13.webp" alt="BINT 作品展示 13" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-14.webp" alt="BINT 作品展示 14" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-15.webp" alt="BINT 作品展示 15" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-16.webp" alt="BINT 作品展示 16" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-17.webp" alt="BINT 作品展示 17" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-18.webp" alt="BINT 作品展示 18" loading="lazy" />
+          </figure>
+          <figure class="work-card landscape">
+            <img src="assets/works/landscape-19.webp" alt="BINT 作品展示 19" loading="lazy" />
+          </figure>
         </div>
       </section>
 
