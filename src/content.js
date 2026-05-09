@@ -37,7 +37,6 @@ import work13 from "../assets/works-selected/work-13.webp";
 import work14 from "../assets/works-selected/work-14.webp";
 import work15 from "../assets/works-selected/work-15.webp";
 
-import blooper01 from "../assets/bloopers/blooper-01.webp";
 import blooper02 from "../assets/bloopers/blooper-02.webp";
 import blooper03 from "../assets/bloopers/blooper-03.webp";
 import blooper04 from "../assets/bloopers/blooper-04.webp";
@@ -118,7 +117,7 @@ export const works = [
   alt: `BINT 部分作品展示 ${String(index + 1).padStart(2, "0")}`,
 }));
 
-export const bloopers = [blooper01, blooper02, blooper03, blooper04].map((src, index) => ({
+export const bloopers = [blooper02, blooper03, blooper04].map((src, index) => ({
   src,
   alt: `BINT 工作花絮 ${String(index + 1).padStart(2, "0")}`,
 }));

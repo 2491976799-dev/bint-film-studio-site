@@ -286,6 +286,33 @@ function useAutoScroller(defaultSpeed = 0.7) {
 
 function NavBar() {
   const [scrolled, setScrolled] = useState(false);
+  const navItems = [
+    ["about", "关于"],
+    ["services", "业务"],
+    ["clients", "客户"],
+    ["works", "作品"],
+    ["bloopers", "花絮"],
+    ["contact", "联系"],
+  ];
+
+  const navigateToSection = (event) => {
+    const sectionId = event.currentTarget.dataset.section;
+    if (!sectionId) return;
+
+    const target = document.getElementById(sectionId);
+    if (!target) return;
+
+    event.preventDefault();
+    const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height ?? 0;
+    const scrollTarget = target.querySelector(".works-heading, .section-title") ?? target;
+    const targetTop = Math.max(
+      0,
+      scrollTarget.getBoundingClientRect().top + window.scrollY - headerHeight - 12,
+    );
+
+    window.scrollTo({ top: targetTop, behavior: "auto" });
+    window.history.pushState(null, "", `#${sectionId}`);
+  };
 
   useEffect(() => {
     const update = () => setScrolled(window.scrollY > 12);
@@ -301,12 +328,16 @@ function NavBar() {
         <strong>{studio.englishName}</strong>
       </a>
       <nav aria-label="主导航">
-        <a href="#about">关于</a>
-        <a href="#services">业务</a>
-        <a href="#clients">客户</a>
-        <a href="#works">作品</a>
-        <a href="#bloopers">花絮</a>
-        <a href="#contact">联系</a>
+        {navItems.map(([sectionId, label]) => (
+          <button
+            type="button"
+            data-section={sectionId}
+            onClick={navigateToSection}
+            key={sectionId}
+          >
+            {label}
+          </button>
+        ))}
       </nav>
     </header>
   );
@@ -326,11 +357,13 @@ function About() {
     <section className="section about" id="about">
       <div className="texture texture-left" aria-hidden="true" />
       <div className="about-copy">
-        {aboutLines.map((line) => (
-          <p key={line}>{line}</p>
+        {aboutLines.map((line, index) => (
+          <p className={index === 0 ? "about-lead" : undefined} key={line}>
+            {line}
+          </p>
         ))}
       </div>
-      <p className="studio-line">以山城为原点 用影像创造价值</p>
+      <p className="studio-line">以山城为原点，用影像创造价值</p>
     </section>
   );
 }
@@ -405,7 +438,7 @@ function ClientLogoSphere() {
       const frontVisibility = rotatedZ <= -0.08 ? 0 : Math.min(1, (rotatedZ + 0.08) / 0.42);
       const opacity = Math.min(1, (0.3 + Math.pow(edgeFade, 1.35) * 0.7) * frontVisibility);
       const depthScale = 0.84 + Math.max(0, rotatedZ) * 0.18;
-      const logoScale = depthScale * (logo.size ?? 1) * 1.15;
+      const logoScale = depthScale * (logo.size ?? 1) * 1.035;
       const widthMap = {
         hero: "clamp(184px, 20vw, 292px)",
         wide: "clamp(148px, 16vw, 224px)",
@@ -459,7 +492,6 @@ function Clients() {
       <div className="texture texture-white top" aria-hidden="true" />
       <SectionTitle kicker="CLIENTS" title="合作客户" />
       <ClientLogoSphere />
-      <p className="copyright">©BINT FILM STUDIO</p>
     </section>
   );
 }
@@ -469,10 +501,10 @@ function SelectedWorks() {
   const loopCopies = [-1, 0, 1];
 
   return (
-    <section className="works-section" id="works">
+    <section className="works-section" id="works" style={{ minHeight: "auto" }}>
       <div className="texture texture-left top" aria-hidden="true" />
       <div className="works-heading">
-        <SectionTitle kicker="PARTIAL WORKS DISPLAY" title="部分作品展示" align="left" />
+        <SectionTitle kicker="PARTIAL WORKS DISPLAY" title="部分作品展示" />
         <div className="rail-actions" aria-label="作品展廊控制">
           <button type="button" onClick={() => scrollRail(-1)} aria-label="上一组作品">
             ←
@@ -482,7 +514,13 @@ function SelectedWorks() {
           </button>
         </div>
       </div>
-      <div className="works-rail auto-rail" ref={railRef} aria-label="横向作品展廊" {...railProps}>
+      <div
+        className="works-rail auto-rail"
+        ref={railRef}
+        aria-label="横向作品展廊"
+        style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
+        {...railProps}
+      >
         {loopCopies.map((copy) => (
           <div
             className="rail-loop-set"
@@ -491,9 +529,19 @@ function SelectedWorks() {
             key={copy}
           >
             {works.map((work, index) => (
-              <figure className="work-card" key={`${copy}-${work.src}`}>
+              <figure
+                className="work-card"
+                style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
+                key={`${copy}-${work.src}`}
+              >
                 <span>{String(index + 1).padStart(2, "0")}</span>
-                <img src={work.src} alt={work.alt} loading="lazy" />
+                <img
+                  src={work.src}
+                  alt={work.alt}
+                  loading={copy === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  fetchPriority={copy === 0 && index < 3 ? "high" : "auto"}
+                />
               </figure>
             ))}
           </div>
@@ -508,10 +556,10 @@ function Bloopers() {
   const loopCopies = [-1, 0, 1];
 
   return (
-    <section className="bloopers-section" id="bloopers">
+    <section className="bloopers-section" id="bloopers" style={{ minHeight: "auto" }}>
       <div className="texture texture-right bottom" aria-hidden="true" />
       <div className="works-heading">
-        <SectionTitle kicker="WORK BLOOPERS" title="工作花絮" align="left" />
+        <SectionTitle kicker="WORK BLOOPERS" title="工作花絮" />
         <div className="rail-actions" aria-label="花絮展廊控制">
           <button type="button" onClick={() => scrollRail(-1)} aria-label="上一组花絮">
             ←
@@ -521,7 +569,13 @@ function Bloopers() {
           </button>
         </div>
       </div>
-      <div className="blooper-rail auto-rail" ref={railRef} aria-label="横向工作花絮展廊" {...railProps}>
+      <div
+        className="blooper-rail auto-rail"
+        ref={railRef}
+        aria-label="横向工作花絮展廊"
+        style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
+        {...railProps}
+      >
         {loopCopies.map((copy) => (
           <div
             className="rail-loop-set"
@@ -530,15 +584,22 @@ function Bloopers() {
             key={copy}
           >
             {bloopers.map((item, index) => (
-              <figure key={`${copy}-${item.src}`}>
-                <img src={item.src} alt={item.alt} loading="lazy" />
+              <figure
+                style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
+                key={`${copy}-${item.src}`}
+              >
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                  loading={copy === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
                 <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
               </figure>
             ))}
           </div>
         ))}
       </div>
-      <p className="copyright">©BINT FILM STUDIO</p>
     </section>
   );
 }
@@ -573,8 +634,11 @@ function FloatingContact() {
           aria-hidden="true"
           focusable="false"
         >
-          <path d="M8.7 23.4 5.5 26c-.38.31-.94 0-.85-.48l.76-4.1A10.1 10.1 0 0 1 3.5 15.5C3.5 9.15 9.1 4 16 4s12.5 5.15 12.5 11.5S22.9 27 16 27a13.9 13.9 0 0 1-7.3-3.6Z" />
-          <path className="chat-dot" d="M11.2 15.8h.01M16 15.8h.01M20.8 15.8h.01" />
+          <path
+            className="chat-bubble-fill"
+            d="M16 4.9C9.1 4.9 3.6 9.65 3.6 15.55c0 3.1 1.58 5.9 4.14 7.88l-.66 3.88c-.08.48.43.83.86.6l3.92-2.02c1.3.38 2.7.58 4.14.58 6.9 0 12.4-4.75 12.4-10.92S22.9 4.9 16 4.9Z"
+          />
+          <path className="chat-bubble-cut" d="M11.25 15.95h.01M16 15.95h.01M20.75 15.95h.01" />
         </svg>
       </button>
       <div className="floating-contact-panel">
