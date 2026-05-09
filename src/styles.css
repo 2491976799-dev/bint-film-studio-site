@@ -76,7 +76,8 @@ button {
 
 .splash-cover.is-exiting {
   pointer-events: none;
-  animation: splashCoverExit 820ms ease both;
+  background: transparent;
+  animation: splashCoverExit 860ms linear both;
 }
 
 .splash-cover::before {
@@ -95,6 +96,11 @@ button {
     var(--paper) 100%
   );
   pointer-events: none;
+}
+
+.splash-cover.is-exiting::before,
+.splash-cover.is-exiting::after {
+  animation: coverWashExit 520ms ease both;
 }
 
 .cover-background {
@@ -161,11 +167,15 @@ button {
 }
 
 .splash-cover.is-exiting .cover-background {
-  animation: coverZoomOut 620ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
+  animation: coverFocusOut 600ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
+}
+
+.splash-cover.is-exiting .splash-burst {
+  animation: coverFocusOut 600ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
 }
 
 .splash-cover.is-exiting .splash-shard {
-  animation: shardBurst 620ms cubic-bezier(0.2, 0.9, 0.16, 1) 90ms both;
+  animation: none;
 }
 
 .splash-lockup {
@@ -193,7 +203,7 @@ button {
 }
 
 .splash-cover.is-exiting .splash-lockup {
-  animation: lockupBurst 560ms cubic-bezier(0.2, 0.9, 0.14, 1) both;
+  animation: lockupFocusOut 600ms cubic-bezier(0.2, 0.9, 0.14, 1) both;
 }
 
 .splash-lockup img {
@@ -234,7 +244,7 @@ button {
 }
 
 .splash-cover.is-exiting .enter-button {
-  animation: enterButtonExit 280ms ease both;
+  animation: enterButtonExit 240ms ease both;
 }
 
 .enter-button:hover {
@@ -247,6 +257,85 @@ button {
   font-size: 14px;
   text-transform: uppercase;
   white-space: nowrap;
+}
+
+.splash-shutter {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.shutter-blade {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.07),
+      rgba(3, 3, 3, 0.94) 18%,
+      var(--dark) 100%
+    );
+  box-shadow: 0 0 48px rgba(0, 0, 0, 0.5);
+  will-change: transform;
+}
+
+.shutter-blade.top {
+  top: 0;
+  transform: translateY(-101%);
+  transform-origin: center bottom;
+}
+
+.shutter-blade.bottom {
+  bottom: 0;
+  background:
+    linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.06),
+      rgba(3, 3, 3, 0.94) 18%,
+      var(--dark) 100%
+    );
+  transform: translateY(101%);
+  transform-origin: center top;
+}
+
+.shutter-slit {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.28) 22%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(255, 255, 255, 0.28) 78%,
+    transparent
+  );
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0.34);
+  will-change: opacity, transform;
+}
+
+.splash-cover.is-exiting .splash-shutter {
+  animation: shutterLayer 860ms linear both;
+}
+
+.splash-cover.is-exiting .shutter-blade.top {
+  animation: shutterTop 860ms cubic-bezier(0.78, 0, 0.18, 1) both;
+}
+
+.splash-cover.is-exiting .shutter-blade.bottom {
+  animation: shutterBottom 860ms cubic-bezier(0.78, 0, 0.18, 1) both;
+}
+
+.splash-cover.is-exiting .shutter-slit {
+  animation: shutterSlit 860ms ease both;
 }
 
 .site-shell {
@@ -530,6 +619,10 @@ button {
 .clients .section-title p,
 .clients .section-title h2 {
   color: #fff;
+}
+
+.clients-frame {
+  width: 100%;
 }
 
 .client-sphere {
@@ -902,16 +995,20 @@ button {
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.28), transparent 30%),
     linear-gradient(145deg, #202020 0%, #060606 72%);
   box-shadow:
-    0 18px 36px rgba(0, 0, 0, 0.28),
-    0 3px 10px rgba(0, 0, 0, 0.16),
+    0 14px 28px rgba(0, 0, 0, 0.18),
+    0 2px 8px rgba(0, 0, 0, 0.12),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  opacity: 0.48;
   transition:
     background 160ms ease,
     box-shadow 160ms ease,
+    opacity 160ms ease,
     transform 160ms ease;
 }
 
-.floating-contact-trigger:hover {
+.floating-contact-trigger:hover,
+.floating-contact:focus-within .floating-contact-trigger,
+.floating-contact.is-open .floating-contact-trigger {
   background:
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.34), transparent 32%),
     linear-gradient(145deg, #292929 0%, #080808 72%);
@@ -919,6 +1016,7 @@ button {
     0 22px 42px rgba(0, 0, 0, 0.3),
     0 4px 12px rgba(0, 0, 0, 0.18),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  opacity: 0.92;
   transform: translateY(-1px);
 }
 
@@ -1028,7 +1126,7 @@ button {
 
 @keyframes splashCoverExit {
   0%,
-  82% {
+  92% {
     opacity: 1;
   }
 
@@ -1037,46 +1135,121 @@ button {
   }
 }
 
-@keyframes coverZoomOut {
+@keyframes coverWashExit {
+  0%,
+  36% {
+    opacity: 1;
+  }
+
+  54%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes coverFocusOut {
   0% {
     opacity: 1;
+    filter: blur(0) brightness(1);
     transform: scale(1);
   }
 
-  42% {
+  26% {
     opacity: 1;
-    transform: scale(1.08);
+    filter: blur(7px) brightness(1.04);
+    transform: scale(1.008);
+  }
+
+  44% {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: scale(1);
+  }
+
+  58% {
+    opacity: 1;
+    filter: blur(0) brightness(1);
+    transform: scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: scale(1.22);
+    filter: blur(0) brightness(1);
+    transform: scale(1);
   }
 }
 
-@keyframes shardBurst {
+@keyframes shutterLayer {
   0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0;
   }
 
+  28%,
+  86% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes shutterTop {
+  0%,
   28% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1.07);
+    transform: translateY(-101%);
+  }
+
+  50%,
+  66% {
+    transform: translateY(0);
   }
 
   100% {
-    opacity: 0;
-    transform:
-      translate3d(var(--burst-x), var(--burst-y), 0)
-      rotate(var(--burst-rotate))
-      scale(1.14);
+    transform: translateY(-101%);
   }
 }
 
-@keyframes lockupBurst {
+@keyframes shutterBottom {
+  0%,
+  28% {
+    transform: translateY(101%);
+  }
+
+  50%,
+  66% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(101%);
+  }
+}
+
+@keyframes shutterSlit {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(-50%) scaleX(0.34);
+  }
+
+  50%,
+  62% {
+    opacity: 1;
+    transform: translateY(-50%) scaleX(1);
+  }
+
+  76%,
+  100% {
+    opacity: 0;
+    transform: translateY(-50%) scaleX(1.08);
+  }
+}
+
+@keyframes lockupFocusOut {
   0% {
     opacity: 1;
+    filter: blur(0);
     transform:
       translate(-50%, -50%)
       translate(
@@ -1086,15 +1259,22 @@ button {
       scale(1);
   }
 
-  34% {
+  26% {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1.18);
+    filter: blur(7px);
+    transform: translate(-50%, -50%) scale(0.992);
+  }
+
+  44% {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate(-50%, -50%) scale(1);
   }
 
   100% {
     opacity: 0;
-    transform: translate(-50%, -50%) scale(2.1);
-    filter: blur(8px);
+    filter: blur(0);
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -1352,6 +1532,7 @@ button {
   .floating-contact-trigger {
     width: 54px;
     height: 54px;
+    opacity: 0.42;
   }
 
   .chat-bubble-icon {
@@ -1363,23 +1544,64 @@ button {
     width: min(286px, calc(100vw - 28px));
   }
 
+  .clients {
+    height: var(--clients-frame-height, 600px);
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .clients-frame {
+    position: relative;
+    left: 50%;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    width: 1080px;
+    height: 600px;
+    padding: 34px 0 24px;
+    transform: translateX(-50%) scale(var(--clients-frame-scale, 1));
+    transform-origin: top center;
+  }
+
+  .clients .section-title {
+    margin: 0 auto;
+    transform: translateX(-0.24em);
+  }
+
+  .clients .section-title p {
+    margin-bottom: 6px;
+    font-size: 28px;
+  }
+
+  .clients .section-title h2 {
+    font-size: 84px;
+  }
+
   .client-sphere {
-    width: 100vw;
-    height: 360px;
-    margin-inline: calc(50% - 50vw);
+    width: 1080px;
+    height: 430px;
+    margin-inline: auto;
+    margin-top: -6px;
+    overflow: hidden;
+    perspective: 1200px;
   }
 
   .sphere-core {
-    width: 58vw;
+    width: 420px;
+    opacity: 0.55;
   }
 
   .sphere-logo {
-    width: min(var(--logo-width, 170px), 54vw);
-    min-height: 44px;
+    width: var(--logo-frame-width, var(--logo-width, 200px));
+    min-height: 132px;
+    transform:
+      translate3d(-50%, -50%, var(--logo-depth, 0px))
+      scale(var(--logo-scale));
   }
 
   .sphere-logo img {
-    max-height: min(var(--logo-max-height, 74px), 82px);
+    max-height: var(--logo-frame-max-height, var(--logo-max-height, 88px));
   }
 
   .work-card {

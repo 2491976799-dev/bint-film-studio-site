@@ -149,6 +149,10 @@ function SplashCover({ onEnter, exiting }) {
       >
         进入网页 <span>Enter Site</span>
       </button>
+      <div className="splash-shutter" aria-hidden="true">
+        <span className="shutter-aperture-ring" />
+        <span className="shutter-aperture-glint" />
+      </div>
     </section>
   );
 }
@@ -439,6 +443,18 @@ function ClientLogoSphere() {
     medium: "clamp(56px, 6.2vw, 88px)",
     tall: "clamp(64px, 7vw, 100px)",
   };
+  const frameWidthMap = {
+    hero: "300px",
+    wide: "230px",
+    medium: "200px",
+    tall: "184px",
+  };
+  const frameMaxHeightMap = {
+    hero: "112px",
+    wide: "88px",
+    medium: "88px",
+    tall: "100px",
+  };
 
   const items = latitudeRows.flatMap((row, rowIndex) => {
     return row.logos
@@ -471,6 +487,9 @@ function ClientLogoSphere() {
             "--logo-z": Math.round(100 + (depth + 1) * 40 + (4 - rowIndex)),
             "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
             "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
+            "--logo-frame-width": frameWidthMap[logo.shape] ?? frameWidthMap.medium,
+            "--logo-frame-max-height":
+              frameMaxHeightMap[logo.shape] ?? frameMaxHeightMap.medium,
           },
         };
       })
@@ -495,11 +514,42 @@ function ClientLogoSphere() {
 }
 
 function Clients() {
+  const [frameScale, setFrameScale] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches
+      ? Math.min(1, window.innerWidth / 1080)
+      : 1,
+  );
+
+  useEffect(() => {
+    const updateScale = () => {
+      const compact = window.matchMedia("(max-width: 560px)").matches;
+      setFrameScale(compact ? Math.min(1, window.innerWidth / 1080) : 1);
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    window.addEventListener("orientationchange", updateScale);
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.removeEventListener("orientationchange", updateScale);
+    };
+  }, []);
+
   return (
-    <section className="clients" id="clients" aria-labelledby="clients-title">
+    <section
+      className="clients"
+      id="clients"
+      aria-labelledby="clients-title"
+      style={{
+        "--clients-frame-scale": frameScale.toFixed(4),
+        "--clients-frame-height": `${Math.round(600 * frameScale)}px`,
+      }}
+    >
       <div className="texture texture-white top" aria-hidden="true" />
-      <SectionTitle kicker="CLIENTS" title="合作客户" />
-      <ClientLogoSphere />
+      <div className="clients-frame">
+        <SectionTitle kicker="CLIENTS" title="合作客户" />
+        <ClientLogoSphere />
+      </div>
     </section>
   );
 }
@@ -730,8 +780,8 @@ export default function App() {
     if (entered || splashExiting) return;
     setSplashExiting(true);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-    window.setTimeout(() => setEntered(true), 560);
-    window.setTimeout(() => setShowSplash(false), 820);
+    window.setTimeout(() => setEntered(true), 500);
+    window.setTimeout(() => setShowSplash(false), 900);
   };
 
   return (
