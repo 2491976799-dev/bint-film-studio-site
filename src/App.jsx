@@ -7,9 +7,24 @@ import {
   studio,
   works,
 } from "./content.js";
+import filmTransitionVideo from "../assets/transitions/film-transition.mp4?url";
+
+const TRANSITION_AUDIO_VOLUME = 0.36;
+
+function getTransitionAudioVolume(currentTime, duration = 1) {
+  const normalizedTime = Math.max(0, Math.min(1, currentTime / (duration || 1)));
+  const fadeIn = Math.min(1, normalizedTime / 0.08);
+  const fadeOutProgress = Math.max(0, Math.min(1, (normalizedTime - 0.48) / 0.38));
+  const easedFadeOut = fadeOutProgress * fadeOutProgress * (3 - 2 * fadeOutProgress);
+
+  return TRANSITION_AUDIO_VOLUME * fadeIn * (1 - easedFadeOut);
+}
 
 function SplashCover({ onEnter, exiting }) {
   const coverRef = useRef(null);
+  const transitionVideoRef = useRef(null);
+  const transitionCanvasRef = useRef(null);
+  const transitionFrameRef = useRef(0);
   const motionCleanupRef = useRef(null);
   const motionRequestedRef = useRef(false);
 
@@ -87,6 +102,160 @@ function SplashCover({ onEnter, exiting }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!exiting) return;
+
+    const transitionVideo = transitionVideoRef.current;
+    const transitionCanvas = transitionCanvasRef.current;
+    if (!transitionVideo || !transitionCanvas) return;
+
+    let stopped = false;
+    const context = transitionCanvas.getContext("2d", { willReadFrequently: true });
+
+    const resizeCanvas = () => {
+      const rect = transitionCanvas.getBoundingClientRect();
+      const maxPixels = 920000;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
+      const density = Math.min(pixelRatio, Math.sqrt(maxPixels / (rect.width * rect.height)));
+      const width = Math.max(1, Math.round(rect.width * density));
+      const height = Math.max(1, Math.round(rect.height * density));
+
+      if (transitionCanvas.width !== width || transitionCanvas.height !== height) {
+        transitionCanvas.width = width;
+        transitionCanvas.height = height;
+      }
+    };
+
+    const drawCoverFrame = () => {
+      if (stopped || !context) return;
+
+      if (!transitionVideo.muted) {
+        transitionVideo.volume = getTransitionAudioVolume(
+          transitionVideo.currentTime,
+          transitionVideo.duration
+        );
+      }
+
+      if (transitionVideo.readyState >= 2 && transitionVideo.videoWidth && transitionVideo.videoHeight) {
+        resizeCanvas();
+
+        const { width, height } = transitionCanvas;
+        const sourceRatio = transitionVideo.videoWidth / transitionVideo.videoHeight;
+        const targetRatio = width / height;
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = transitionVideo.videoWidth;
+        let sourceHeight = transitionVideo.videoHeight;
+
+        if (targetRatio > sourceRatio) {
+          sourceHeight = transitionVideo.videoWidth / targetRatio;
+          sourceY = (transitionVideo.videoHeight - sourceHeight) / 2;
+        } else {
+          sourceWidth = transitionVideo.videoHeight * targetRatio;
+          sourceX = (transitionVideo.videoWidth - sourceWidth) * (height > width ? 1 : 0.5);
+        }
+
+        context.clearRect(0, 0, width, height);
+        context.drawImage(
+          transitionVideo,
+          sourceX,
+          sourceY,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          width,
+          height
+        );
+
+        const frame = context.getImageData(0, 0, width, height);
+        const { data } = frame;
+
+        // Luma-key the supplied transition so black film stays transparent, like a screen layer.
+        for (let index = 0; index < data.length; index += 4) {
+          const red = data[index];
+          const green = data[index + 1];
+          const blue = data[index + 2];
+          const luma = red * 0.2126 + green * 0.7152 + blue * 0.0722;
+          const keyed = Math.max(0, Math.min(1, (luma - 40) / 132));
+          const alpha = Math.pow(keyed, 1.44);
+
+          data[index] = Math.min(255, red * 1.46 + 24 * alpha);
+          data[index + 1] = Math.min(255, green * 1.28 + 18 * alpha);
+          data[index + 2] = Math.min(255, blue * 1.08 + 10 * alpha);
+          data[index + 3] = Math.round(alpha * 245);
+        }
+
+        context.putImageData(frame, 0, 0);
+
+        const grainSeed = Math.round(transitionVideo.currentTime * 30) + 1;
+        let seed = (grainSeed * 2654435761 + width * 97 + height * 193) >>> 0;
+        const random = () => {
+          seed = (seed * 1664525 + 1013904223) >>> 0;
+          return seed / 4294967296;
+        };
+        const grainCount = Math.max(48, Math.round((width * height) / 9000));
+        const grainScale = height > width ? 1.9 : 1.2;
+
+        context.save();
+        context.globalCompositeOperation = "screen";
+        for (let index = 0; index < grainCount; index += 1) {
+          const size = (random() < 0.76 ? 1 : 1.9) * grainScale;
+          const alpha = 0.22 + random() * 0.26;
+          const red = 235 + Math.round(random() * 20);
+          const green = 218 + Math.round(random() * 26);
+          const blue = 178 + Math.round(random() * 42);
+
+          context.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+          context.fillRect(random() * width, random() * height, size, size);
+        }
+        context.restore();
+      }
+
+      if (!transitionVideo.ended) {
+        transitionFrameRef.current = window.requestAnimationFrame(drawCoverFrame);
+      }
+    };
+
+    const startDrawing = () => {
+      if (stopped) return;
+      window.cancelAnimationFrame(transitionFrameRef.current);
+      transitionFrameRef.current = window.requestAnimationFrame(drawCoverFrame);
+    };
+
+    if (transitionVideo.paused) {
+      transitionVideo.volume = getTransitionAudioVolume(0, transitionVideo.duration);
+      transitionVideo.muted = false;
+      transitionVideo.currentTime = 0;
+      transitionVideo.play().then(startDrawing).catch(() => {
+        transitionVideo.muted = true;
+        transitionVideo.play().then(startDrawing).catch(startDrawing);
+      });
+    } else {
+      startDrawing();
+    }
+
+    return () => {
+      stopped = true;
+      transitionVideo.volume = 0;
+      window.cancelAnimationFrame(transitionFrameRef.current);
+      context?.clearRect(0, 0, transitionCanvas.width, transitionCanvas.height);
+    };
+  }, [exiting]);
+
+  const playTransitionMedia = () => {
+    const transitionVideo = transitionVideoRef.current;
+    if (!transitionVideo) return;
+
+    transitionVideo.volume = getTransitionAudioVolume(0, transitionVideo.duration);
+    transitionVideo.muted = false;
+    transitionVideo.currentTime = 0;
+    transitionVideo.play().catch(() => {
+      transitionVideo.muted = true;
+      transitionVideo.play().catch(() => {});
+    });
+  };
+
   const requestMotionAccess = async (event) => {
     event?.stopPropagation();
 
@@ -144,12 +313,22 @@ function SplashCover({ onEnter, exiting }) {
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
+          playTransitionMedia();
           onEnter();
         }}
       >
         进入网页 <span>Enter Site</span>
       </button>
-      <div className="splash-shutter" aria-hidden="true" />
+      <div className="film-transition" aria-hidden="true">
+        <canvas ref={transitionCanvasRef} className="film-transition-canvas" />
+        <video
+          ref={transitionVideoRef}
+          className="film-transition-source"
+          src={filmTransitionVideo}
+          playsInline
+          preload="auto"
+        />
+      </div>
     </section>
   );
 }
@@ -763,8 +942,8 @@ export default function App() {
     if (entered || splashExiting) return;
     setSplashExiting(true);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-    window.setTimeout(() => setEntered(true), 460);
-    window.setTimeout(() => setShowSplash(false), 760);
+    window.setTimeout(() => setEntered(true), 470);
+    window.setTimeout(() => setShowSplash(false), 940);
   };
 
   return (
