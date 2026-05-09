@@ -149,10 +149,7 @@ function SplashCover({ onEnter, exiting }) {
       >
         进入网页 <span>Enter Site</span>
       </button>
-      <div className="splash-shutter" aria-hidden="true">
-        <span className="shutter-aperture-ring" />
-        <span className="shutter-aperture-glint" />
-      </div>
+      <div className="splash-shutter" aria-hidden="true" />
     </section>
   );
 }
@@ -455,6 +452,18 @@ function ClientLogoSphere() {
     medium: "88px",
     tall: "100px",
   };
+  const mobileWidthMap = {
+    hero: "27.78vw",
+    wide: "21.3vw",
+    medium: "18.52vw",
+    tall: "17.04vw",
+  };
+  const mobileMaxHeightMap = {
+    hero: "10.37vw",
+    wide: "8.15vw",
+    medium: "8.15vw",
+    tall: "9.26vw",
+  };
 
   const items = latitudeRows.flatMap((row, rowIndex) => {
     return row.logos
@@ -490,6 +499,9 @@ function ClientLogoSphere() {
             "--logo-frame-width": frameWidthMap[logo.shape] ?? frameWidthMap.medium,
             "--logo-frame-max-height":
               frameMaxHeightMap[logo.shape] ?? frameMaxHeightMap.medium,
+            "--logo-mobile-width": mobileWidthMap[logo.shape] ?? mobileWidthMap.medium,
+            "--logo-mobile-max-height":
+              mobileMaxHeightMap[logo.shape] ?? mobileMaxHeightMap.medium,
           },
         };
       })
@@ -514,37 +526,8 @@ function ClientLogoSphere() {
 }
 
 function Clients() {
-  const [frameScale, setFrameScale] = useState(() =>
-    typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches
-      ? Math.min(1, window.innerWidth / 1080)
-      : 1,
-  );
-
-  useEffect(() => {
-    const updateScale = () => {
-      const compact = window.matchMedia("(max-width: 560px)").matches;
-      setFrameScale(compact ? Math.min(1, window.innerWidth / 1080) : 1);
-    };
-
-    updateScale();
-    window.addEventListener("resize", updateScale);
-    window.addEventListener("orientationchange", updateScale);
-    return () => {
-      window.removeEventListener("resize", updateScale);
-      window.removeEventListener("orientationchange", updateScale);
-    };
-  }, []);
-
   return (
-    <section
-      className="clients"
-      id="clients"
-      aria-labelledby="clients-title"
-      style={{
-        "--clients-frame-scale": frameScale.toFixed(4),
-        "--clients-frame-height": `${Math.round(600 * frameScale)}px`,
-      }}
-    >
+    <section className="clients" id="clients" aria-labelledby="clients-title">
       <div className="texture texture-white top" aria-hidden="true" />
       <div className="clients-frame">
         <SectionTitle kicker="CLIENTS" title="合作客户" />
@@ -780,8 +763,8 @@ export default function App() {
     if (entered || splashExiting) return;
     setSplashExiting(true);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-    window.setTimeout(() => setEntered(true), 500);
-    window.setTimeout(() => setShowSplash(false), 900);
+    window.setTimeout(() => setEntered(true), 460);
+    window.setTimeout(() => setShowSplash(false), 760);
   };
 
   return (

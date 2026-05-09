@@ -9,24 +9,6 @@
   --max: 1180px;
 }
 
-@property --iris-radius {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 130vmax;
-}
-
-@property --iris-feather {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 1.8vmax;
-}
-
-@property --iris-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: -18deg;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -95,7 +77,7 @@ button {
 .splash-cover.is-exiting {
   pointer-events: none;
   background: transparent;
-  animation: splashCoverExit 900ms linear both;
+  animation: splashCoverExit 760ms linear both;
 }
 
 .splash-cover::before {
@@ -185,11 +167,11 @@ button {
 }
 
 .splash-cover.is-exiting .cover-background {
-  animation: coverFocusOut 600ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
+  animation: coverFocusOut 520ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
 }
 
 .splash-cover.is-exiting .splash-burst {
-  animation: coverFocusOut 600ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
+  animation: coverFocusOut 520ms cubic-bezier(0.18, 0.76, 0.22, 1) both;
 }
 
 .splash-cover.is-exiting .splash-shard {
@@ -221,7 +203,7 @@ button {
 }
 
 .splash-cover.is-exiting .splash-lockup {
-  animation: lockupFocusOut 600ms cubic-bezier(0.2, 0.9, 0.14, 1) both;
+  animation: lockupFocusOut 520ms cubic-bezier(0.2, 0.9, 0.14, 1) both;
 }
 
 .splash-lockup img {
@@ -278,9 +260,6 @@ button {
 }
 
 .splash-shutter {
-  --iris-radius: 130vmax;
-  --iris-feather: 1.8vmax;
-  --iris-angle: -18deg;
   position: absolute;
   inset: 0;
   z-index: 7;
@@ -288,90 +267,20 @@ button {
   opacity: 0;
   background:
     radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 255, 255, 0.04) 0 7vmax,
-      rgba(255, 255, 255, 0.018) 7vmax 16vmax,
-      rgba(0, 0, 0, 0.24) 32vmax,
-      rgba(0, 0, 0, 0.94) 74vmax
+      circle at 50% 48%,
+      rgba(255, 255, 255, 0.035) 0 8%,
+      rgba(0, 0, 0, 0.18) 34%,
+      rgba(0, 0, 0, 0.72) 66%,
+      rgba(0, 0, 0, 0.96) 100%
     ),
-    repeating-conic-gradient(
-      from var(--iris-angle) at 50% 50%,
-      #020202 0deg 29deg,
-      #050505 29deg 36deg,
-      #090909 36deg 39deg,
-      #030303 39deg 45deg
-    );
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    transparent 0 var(--iris-radius),
-    rgba(0, 0, 0, 0.86) calc(var(--iris-radius) + var(--iris-feather)),
-    #000 calc(var(--iris-radius) + var(--iris-feather) + 0.8vmax)
-  );
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    transparent 0 var(--iris-radius),
-    rgba(0, 0, 0, 0.86) calc(var(--iris-radius) + var(--iris-feather)),
-    #000 calc(var(--iris-radius) + var(--iris-feather) + 0.8vmax)
-  );
+    #020202;
   pointer-events: none;
-  will-change: opacity, --iris-radius, --iris-angle;
-}
-
-.shutter-aperture-ring,
-.shutter-aperture-glint {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-
-.shutter-aperture-ring {
-  left: 50%;
-  top: 50%;
-  width: calc(var(--iris-radius) * 2);
-  height: calc(var(--iris-radius) * 2);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 50%;
-  box-shadow:
-    0 0 22px rgba(255, 255, 255, 0.07),
-    inset 0 0 30px rgba(255, 255, 255, 0.05);
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--iris-angle));
-  will-change: width, height, opacity, transform;
-}
-
-.shutter-aperture-glint {
-  left: 50%;
-  top: 50%;
-  width: min(34vw, 420px);
-  height: 1px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.1) 24%,
-      rgba(255, 255, 255, 0.42) 50%,
-      rgba(255, 255, 255, 0.1) 76%,
-      transparent
-    );
-  opacity: 0;
-  transform: translate(-50%, -50%) scaleX(0.2) rotate(-8deg);
+  transform: scale(1.06);
   will-change: opacity, transform;
 }
 
 .splash-cover.is-exiting .splash-shutter {
-  animation:
-    shutterLayer 900ms linear both,
-    irisAperture 900ms cubic-bezier(0.78, 0, 0.17, 1) both;
-}
-
-.splash-cover.is-exiting .shutter-aperture-ring {
-  animation: apertureRing 900ms ease both;
-}
-
-.splash-cover.is-exiting .shutter-aperture-glint {
-  animation: apertureGlint 900ms ease both;
+  animation: exposureBlink 760ms cubic-bezier(0.7, 0, 0.2, 1) both;
 }
 
 .site-shell {
@@ -1162,7 +1071,7 @@ button {
 
 @keyframes splashCoverExit {
   0%,
-  92% {
+  88% {
     opacity: 1;
   }
 
@@ -1186,122 +1095,60 @@ button {
 @keyframes coverFocusOut {
   0% {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: blur(0) brightness(1) contrast(1);
     transform: scale(1);
   }
 
-  26% {
+  24% {
     opacity: 1;
-    filter: blur(5.5px) brightness(1.03);
-    transform: scale(1.005);
+    filter: blur(4.5px) brightness(1.045) contrast(0.96);
+    transform: scale(1.004);
   }
 
-  44% {
+  42% {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: blur(0) brightness(1.01) contrast(1);
     transform: scale(1);
   }
 
-  58% {
+  62% {
     opacity: 1;
-    filter: blur(0) brightness(1);
+    filter: blur(0) brightness(1) contrast(1);
     transform: scale(1);
   }
 
   100% {
     opacity: 0;
-    filter: blur(0) brightness(1);
+    filter: blur(0) brightness(0.92) contrast(1);
     transform: scale(1);
   }
 }
 
-@keyframes shutterLayer {
+@keyframes exposureBlink {
   0% {
     opacity: 0;
+    transform: scale(1.06);
   }
 
-  24%,
-  88% {
-    opacity: 1;
-  }
-
-  100% {
+  34% {
     opacity: 0;
-  }
-}
-
-@keyframes irisAperture {
-  0%,
-  24% {
-    --iris-radius: 130vmax;
-    --iris-feather: 1.8vmax;
-    --iris-angle: -18deg;
+    transform: scale(1.04);
   }
 
-  40% {
-    --iris-radius: 36vmax;
-    --iris-feather: 1.2vmax;
-    --iris-angle: 8deg;
-  }
-
-  54%,
+  52%,
   64% {
-    --iris-radius: 0vmax;
-    --iris-feather: 0.2vmax;
-    --iris-angle: 34deg;
+    opacity: 1;
+    transform: scale(1);
   }
 
-  78% {
-    --iris-radius: 32vmax;
-    --iris-feather: 1.1vmax;
-    --iris-angle: 54deg;
-  }
-
-  100% {
-    --iris-radius: 130vmax;
-    --iris-feather: 1.8vmax;
-    --iris-angle: 76deg;
-  }
-}
-
-@keyframes apertureRing {
-  0%,
-  26% {
-    opacity: 0;
-  }
-
-  40% {
-    opacity: 0.34;
-  }
-
-  54%,
-  64%,
-  86% {
-    opacity: 0;
+  82% {
+    opacity: 0.28;
+    transform: scale(1.012);
   }
 
   100% {
     opacity: 0;
-  }
-}
-
-@keyframes apertureGlint {
-  0%,
-  45% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scaleX(0.2) rotate(-8deg);
-  }
-
-  55%,
-  62% {
-    opacity: 0.36;
-    transform: translate(-50%, -50%) scaleX(0.72) rotate(-8deg);
-  }
-
-  72%,
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scaleX(0.26) rotate(-8deg);
+    transform: scale(1.02);
   }
 }
 
@@ -1318,13 +1165,13 @@ button {
       scale(1);
   }
 
-  26% {
+  24% {
     opacity: 1;
-    filter: blur(5.5px);
-    transform: translate(-50%, -50%) scale(0.996);
+    filter: blur(4.5px);
+    transform: translate(-50%, -50%) scale(0.997);
   }
 
-  44% {
+  42% {
     opacity: 1;
     filter: blur(0);
     transform: translate(-50%, -50%) scale(1);
@@ -1333,7 +1180,7 @@ button {
   100% {
     opacity: 0;
     filter: blur(0);
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%) scale(0.998);
   }
 }
 
@@ -1604,23 +1451,22 @@ button {
   }
 
   .clients {
-    height: var(--clients-frame-height, 600px);
-    min-height: 0;
-    padding: 0;
+    min-height: auto;
+    aspect-ratio: 1080 / 600;
+    align-content: start;
+    padding: 3.15vw 0 2.22vw;
     overflow: hidden;
   }
 
   .clients-frame {
     position: relative;
-    left: 50%;
     display: grid;
-    align-content: center;
+    align-content: start;
     justify-items: center;
-    width: 1080px;
-    height: 600px;
-    padding: 34px 0 24px;
-    transform: translateX(-50%) scale(var(--clients-frame-scale, 1));
-    transform-origin: top center;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    transform: none;
   }
 
   .clients .section-title {
@@ -1629,38 +1475,38 @@ button {
   }
 
   .clients .section-title p {
-    margin-bottom: 6px;
-    font-size: 28px;
+    margin-bottom: 0.56vw;
+    font-size: 2.59vw;
   }
 
   .clients .section-title h2 {
-    font-size: 84px;
+    font-size: 7.78vw;
   }
 
   .client-sphere {
-    width: 1080px;
-    height: 430px;
+    width: 100vw;
+    height: 39.82vw;
     margin-inline: auto;
-    margin-top: -6px;
-    overflow: hidden;
+    margin-top: -0.56vw;
+    overflow: visible;
     perspective: 1200px;
   }
 
   .sphere-core {
-    width: 420px;
+    width: 38.89vw;
     opacity: 0.55;
   }
 
   .sphere-logo {
-    width: var(--logo-frame-width, var(--logo-width, 200px));
-    min-height: 132px;
+    width: var(--logo-mobile-width, 18.52vw);
+    min-height: 12.22vw;
     transform:
       translate3d(-50%, -50%, var(--logo-depth, 0px))
       scale(var(--logo-scale));
   }
 
   .sphere-logo img {
-    max-height: var(--logo-frame-max-height, var(--logo-max-height, 88px));
+    max-height: var(--logo-mobile-max-height, 8.15vw);
   }
 
   .work-card {
