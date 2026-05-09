@@ -5,3 +5,4 @@ artifacts/
 .DS_Store
 assets/.DS_Store
 edgeone-*.tgz
+node_modules/

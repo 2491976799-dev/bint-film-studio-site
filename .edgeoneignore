@@ -1,0 +1,10 @@
+.git/
+.DS_Store
+artifacts/
+assets/.DS_Store
+assets/contact-sheet.png
+assets/extracted/
+assets/pages/
+edgeone-*.tgz
+node_modules/
+public/
