@@ -9,6 +9,7 @@ const files = [
   "favicon.svg",
   "robots.txt",
   "share-card.png",
+  "share-card-v2.png",
   "site.webmanifest",
 ];
 

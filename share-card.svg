@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
   <rect width="1200" height="1200" fill="#ffffff"/>
-  <rect x="286" y="286" width="628" height="628" fill="none" stroke="#111111" stroke-width="24"/>
-  <text x="600" y="636"
+  <rect x="36" y="36" width="1128" height="1128" fill="none" stroke="#111111" stroke-width="34"/>
+  <text x="600" y="622"
     fill="#111111"
     font-family="Arial, Helvetica, sans-serif"
-    font-size="154"
+    font-size="330"
     font-weight="800"
     letter-spacing="2"
     text-anchor="middle"
