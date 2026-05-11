@@ -781,8 +781,13 @@ button {
   scroll-padding-inline: max(22px, calc((100vw - var(--max)) / 2));
   scroll-snap-type: none;
   scrollbar-width: none;
-  cursor: ew-resize;
+  cursor: grab;
   touch-action: pan-y;
+}
+
+.works-rail.is-dragging,
+.blooper-rail.is-dragging {
+  cursor: grabbing;
 }
 
 .works-rail {
@@ -838,7 +843,7 @@ button {
   inset: 0;
   z-index: 4;
   background: transparent;
-  pointer-events: auto;
+  pointer-events: none;
   -webkit-touch-callout: none;
   user-select: none;
 }
@@ -1012,8 +1017,8 @@ button {
 .floating-contact {
   position: fixed;
   right: clamp(16px, 2.8vw, 34px);
-  top: 16.666vh;
-  top: calc(100dvh / 6);
+  top: 28vh;
+  top: calc(100dvh * 0.28);
   bottom: auto;
   z-index: 95;
   display: grid;
@@ -1083,8 +1088,8 @@ button {
 .floating-contact-panel {
   position: absolute;
   right: 0;
-  top: auto;
-  bottom: calc(100% + 12px);
+  top: calc(100% + 12px);
+  bottom: auto;
   display: grid;
   gap: 8px;
   width: min(286px, calc(100vw - 36px));
@@ -1109,7 +1114,6 @@ button {
   transform: translateY(0);
 }
 
-.floating-contact-panel a,
 .floating-contact-panel button {
   display: grid;
   grid-template-columns: 58px minmax(0, 1fr) auto;
@@ -1598,6 +1602,8 @@ button {
 
   .floating-contact {
     right: 14px;
+    top: 30vh;
+    top: calc(100dvh * 0.3);
   }
 
   .floating-contact-trigger {

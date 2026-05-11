@@ -394,6 +394,12 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
   const currentSpeedRef = useRef(defaultSpeed);
   const offsetRef = useRef(0);
   const boostResetRef = useRef(0);
+  const dragRef = useRef({
+    active: false,
+    lastX: 0,
+    lastTime: 0,
+    velocity: 0,
+  });
 
   const getDefaultSpeed = () => {
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches) {
@@ -471,7 +477,38 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
     };
   }, []);
 
+  const onPointerDown = (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    const rail = railRef.current;
+    if (!rail) return;
+
+    window.clearTimeout(boostResetRef.current);
+    dragRef.current = {
+      active: true,
+      lastX: event.clientX,
+      lastTime: performance.now(),
+      velocity: 0,
+    };
+    targetSpeedRef.current = 0;
+    currentSpeedRef.current = 0;
+    rail.classList.add("is-dragging");
+    rail.setPointerCapture?.(event.pointerId);
+  };
+
   const onPointerMove = (event) => {
+    if (dragRef.current.active) {
+      const now = performance.now();
+      const deltaX = event.clientX - dragRef.current.lastX;
+      const deltaTime = Math.max(8, now - dragRef.current.lastTime);
+
+      offsetRef.current -= deltaX;
+      dragRef.current.velocity = -deltaX / deltaTime;
+      dragRef.current.lastX = event.clientX;
+      dragRef.current.lastTime = now;
+      applyTrackPosition();
+      return;
+    }
+
     const baseSpeed = getDefaultSpeed();
     const rect = event.currentTarget.getBoundingClientRect();
     const ratio = (event.clientX - rect.left) / rect.width;
@@ -482,6 +519,19 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
   };
 
   const onPointerLeave = () => {
+    if (dragRef.current.active) return;
+    targetSpeedRef.current = getDefaultSpeed();
+  };
+
+  const finishDrag = (event) => {
+    if (!dragRef.current.active) return;
+
+    const rail = railRef.current;
+    rail?.classList.remove("is-dragging");
+    rail?.releasePointerCapture?.(event.pointerId);
+
+    dragRef.current.active = false;
+    currentSpeedRef.current = dragRef.current.velocity * 16;
     targetSpeedRef.current = getDefaultSpeed();
   };
 
@@ -497,7 +547,10 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
   return {
     railRef,
     railProps: {
+      onPointerDown,
       onPointerMove,
+      onPointerUp: finishDrag,
+      onPointerCancel: finishDrag,
       onPointerLeave,
       onContextMenu: preventMediaSave,
       onDragStart: preventMediaSave,
@@ -777,7 +830,7 @@ function Clients() {
 
 function SelectedWorks() {
   const { railRef, railProps, scrollRail } = useInfiniteTrack(0.18);
-  const loopCopies = [0, 1];
+  const loopCopies = [0, 1, 2, 3];
 
   return (
     <section className="works-section" id="works" style={{ minHeight: "auto" }}>
@@ -837,7 +890,7 @@ function SelectedWorks() {
 
 function Bloopers() {
   const { railRef, railProps, scrollRail } = useInfiniteTrack(0.14);
-  const loopCopies = [0, 1];
+  const loopCopies = [0, 1, 2, 3];
 
   return (
     <section className="bloopers-section" id="bloopers" style={{ minHeight: "auto" }}>
@@ -931,10 +984,6 @@ function FloatingContact() {
         </svg>
       </button>
       <div className="floating-contact-panel">
-        <a href={`tel:${studio.phone}`}>
-          <span>TEL</span>
-          <strong>{studio.phone}</strong>
-        </a>
         <button type="button" onClick={copyWechat}>
           <span>WECHAT</span>
           <strong>{studio.wechat}</strong>
@@ -988,7 +1037,6 @@ function Contact() {
       <div className="contact-inner">
         <h2>喜欢您来。</h2>
         <div className="contact-list contact-details">
-          <a href={`tel:${studio.phone}`}>TEL: {studio.phone}</a>
           <button type="button" onClick={copyWechat}>
             WECHAT: {studio.wechat}
             <span>{copied ? "已复制" : "复制"}</span>

@@ -62,7 +62,6 @@ export const studio = {
   name: "BINT有神無迹影视",
   mark: "YSWJ",
   englishName: "BINT FILM STUDIO",
-  phone: "19863316268",
   wechat: "LOWLEVELFLIGHT",
   address: "重庆市南岸区南滨西路6号",
   addressEn: "NO. 6, NANBIN WEST ROAD, NAN'AN DISTRICT, CHONGQING, CHINA",
