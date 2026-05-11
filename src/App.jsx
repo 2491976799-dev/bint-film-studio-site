@@ -898,7 +898,7 @@ function Clients() {
 }
 
 function SelectedWorks() {
-  const { railRef, railProps, registerItem, scrollRail } = useInfiniteTrack(works.length, 0.18);
+  const { railRef, railProps, registerItem, scrollRail } = useInfiniteTrack(works.length, 0.14);
 
   return (
     <section className="works-section" id="works" style={{ minHeight: "auto" }}>
