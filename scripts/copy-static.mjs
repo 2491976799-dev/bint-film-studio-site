@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..");
 const outDir = resolve(root, "docs");
-const files = ["404.html", "favicon.svg", "robots.txt", "site.webmanifest"];
+const files = ["404.html", "CNAME", "favicon.svg", "robots.txt", "site.webmanifest"];
 
 await mkdir(outDir, { recursive: true });
 
