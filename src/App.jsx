@@ -392,13 +392,16 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
   const railRef = useRef(null);
   const targetSpeedRef = useRef(defaultSpeed);
   const currentSpeedRef = useRef(defaultSpeed);
-  const offsetRef = useRef(0);
   const boostResetRef = useRef(0);
+  const initializedRef = useRef(false);
   const dragRef = useRef({
     active: false,
+    pointerId: null,
+    pointerType: "",
     lastX: 0,
     lastTime: 0,
     velocity: 0,
+    startScrollLeft: 0,
   });
 
   const getDefaultSpeed = () => {
@@ -411,33 +414,42 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
 
   const getLoopMetrics = () => {
     const rail = railRef.current;
-    const track = rail?.querySelector("[data-loop-track]");
     const baseSet = rail?.querySelector('[data-loop-set="base"]');
-    if (!rail || !track || !baseSet) return null;
+    if (!rail || !baseSet) return null;
 
-    const styles = window.getComputedStyle(track);
+    const styles = window.getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     return {
-      track,
+      start: baseSet.offsetLeft,
       width: baseSet.getBoundingClientRect().width + gap,
     };
   };
 
-  const applyTrackPosition = () => {
+  const normalizeLoopPosition = () => {
+    const rail = railRef.current;
     const metrics = getLoopMetrics();
-    if (!metrics || metrics.width <= 0) return;
-    const { track, width } = metrics;
+    if (!rail || !metrics || metrics.width <= 0) return;
+    const { start, width } = metrics;
 
-    offsetRef.current = ((offsetRef.current % width) + width) % width;
-    track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+    if (!initializedRef.current) {
+      rail.scrollLeft = start;
+      initializedRef.current = true;
+      return;
+    }
+
+    if (rail.scrollLeft <= start - width * 0.5) {
+      rail.scrollLeft += width;
+    } else if (rail.scrollLeft >= start + width * 0.5) {
+      rail.scrollLeft -= width;
+    }
   };
 
   const resetTrack = () => {
     const speed = getDefaultSpeed();
     targetSpeedRef.current = speed;
     currentSpeedRef.current = speed;
-    offsetRef.current = 0;
-    applyTrackPosition();
+    initializedRef.current = false;
+    normalizeLoopPosition();
   };
 
   useEffect(() => {
@@ -454,13 +466,14 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
 
     const tick = (time) => {
       const delta = Math.min(32, time - lastTime);
-      const metrics = getLoopMetrics();
+      const rail = railRef.current;
 
-      if (metrics && metrics.width > 0) {
+      if (rail && rail.scrollWidth > rail.clientWidth) {
+        normalizeLoopPosition();
         currentSpeedRef.current +=
           (targetSpeedRef.current - currentSpeedRef.current) * 0.045;
-        offsetRef.current += currentSpeedRef.current * delta;
-        applyTrackPosition();
+        rail.scrollLeft += currentSpeedRef.current * delta;
+        normalizeLoopPosition();
       }
 
       lastTime = time;
@@ -484,28 +497,38 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
 
     window.clearTimeout(boostResetRef.current);
     dragRef.current = {
-      active: true,
+      active: event.pointerType === "mouse",
+      pointerId: event.pointerId,
+      pointerType: event.pointerType,
       lastX: event.clientX,
       lastTime: performance.now(),
       velocity: 0,
+      startScrollLeft: rail.scrollLeft,
     };
     targetSpeedRef.current = 0;
     currentSpeedRef.current = 0;
-    rail.classList.add("is-dragging");
-    rail.setPointerCapture?.(event.pointerId);
+    normalizeLoopPosition();
+
+    if (event.pointerType === "mouse") {
+      rail.classList.add("is-dragging");
+      rail.setPointerCapture?.(event.pointerId);
+      event.preventDefault();
+    }
   };
 
   const onPointerMove = (event) => {
-    if (dragRef.current.active) {
+    const rail = railRef.current;
+    if (dragRef.current.active && rail) {
       const now = performance.now();
       const deltaX = event.clientX - dragRef.current.lastX;
       const deltaTime = Math.max(8, now - dragRef.current.lastTime);
 
-      offsetRef.current -= deltaX;
+      rail.scrollLeft -= deltaX;
       dragRef.current.velocity = -deltaX / deltaTime;
       dragRef.current.lastX = event.clientX;
       dragRef.current.lastTime = now;
-      applyTrackPosition();
+      normalizeLoopPosition();
+      event.preventDefault();
       return;
     }
 
@@ -524,21 +547,32 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
   };
 
   const finishDrag = (event) => {
-    if (!dragRef.current.active) return;
-
     const rail = railRef.current;
-    rail?.classList.remove("is-dragging");
-    rail?.releasePointerCapture?.(event.pointerId);
+    const wasMouseDrag = dragRef.current.active;
+
+    if (wasMouseDrag) {
+      rail?.classList.remove("is-dragging");
+      rail?.releasePointerCapture?.(event.pointerId);
+      currentSpeedRef.current = dragRef.current.velocity * 16;
+    }
 
     dragRef.current.active = false;
-    currentSpeedRef.current = dragRef.current.velocity * 16;
+    dragRef.current.pointerId = null;
     targetSpeedRef.current = getDefaultSpeed();
   };
 
   const scrollRail = (direction) => {
+    const rail = railRef.current;
+    if (!rail) return;
+
     const baseSpeed = getDefaultSpeed();
     window.clearTimeout(boostResetRef.current);
-    targetSpeedRef.current = direction * baseSpeed * 4;
+    normalizeLoopPosition();
+    targetSpeedRef.current = direction * baseSpeed * 1.8;
+    rail.scrollBy({
+      left: direction * Math.max(rail.clientWidth * 0.48, 220),
+      behavior: "smooth",
+    });
     boostResetRef.current = window.setTimeout(() => {
       targetSpeedRef.current = baseSpeed;
     }, 520);
@@ -552,6 +586,7 @@ function useInfiniteTrack(defaultSpeed = 0.7) {
       onPointerUp: finishDrag,
       onPointerCancel: finishDrag,
       onPointerLeave,
+      onScroll: normalizeLoopPosition,
       onContextMenu: preventMediaSave,
       onDragStart: preventMediaSave,
     },
@@ -830,7 +865,7 @@ function Clients() {
 
 function SelectedWorks() {
   const { railRef, railProps, scrollRail } = useInfiniteTrack(0.18);
-  const loopCopies = [0, 1, 2, 3];
+  const loopCopies = [-1, 0, 1];
 
   return (
     <section className="works-section" id="works" style={{ minHeight: "auto" }}>
@@ -853,36 +888,34 @@ function SelectedWorks() {
         style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
         {...railProps}
       >
-        <div className="rail-track" data-loop-track>
-          {loopCopies.map((copy) => (
-            <div
-              className="rail-loop-set"
-              data-loop-set={copy === 0 ? "base" : undefined}
-              aria-hidden={copy === 0 ? undefined : true}
-              key={copy}
-            >
-              {works.map((work, index) => (
-                <figure
-                  className="work-card"
-                  style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
-                  key={`${copy}-${work.src}`}
-                >
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <img
-                    src={work.src}
-                    alt={work.alt}
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
-                    draggable="false"
-                    onContextMenu={preventMediaSave}
-                    onDragStart={preventMediaSave}
-                  />
-                </figure>
-              ))}
-            </div>
-          ))}
-        </div>
+        {loopCopies.map((copy) => (
+          <div
+            className="rail-loop-set"
+            data-loop-set={copy === 0 ? "base" : undefined}
+            aria-hidden={copy === 0 ? undefined : true}
+            key={copy}
+          >
+            {works.map((work, index) => (
+              <figure
+                className="work-card"
+                style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
+                key={`${copy}-${work.src}`}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <img
+                  src={work.src}
+                  alt={work.alt}
+                  loading="eager"
+                  decoding="async"
+                  fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
+                  draggable="false"
+                  onContextMenu={preventMediaSave}
+                  onDragStart={preventMediaSave}
+                />
+              </figure>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -890,7 +923,7 @@ function SelectedWorks() {
 
 function Bloopers() {
   const { railRef, railProps, scrollRail } = useInfiniteTrack(0.14);
-  const loopCopies = [0, 1, 2, 3];
+  const loopCopies = [-1, 0, 1];
 
   return (
     <section className="bloopers-section" id="bloopers" style={{ minHeight: "auto" }}>
@@ -913,34 +946,32 @@ function Bloopers() {
         style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
         {...railProps}
       >
-        <div className="rail-track" data-loop-track>
-          {loopCopies.map((copy) => (
-            <div
-              className="rail-loop-set"
-              data-loop-set={copy === 0 ? "base" : undefined}
-              aria-hidden={copy === 0 ? undefined : true}
-              key={copy}
-            >
-              {bloopers.map((item, index) => (
-                <figure
-                  style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
-                  key={`${copy}-${item.src}`}
-                >
-                  <img
-                    src={item.src}
-                    alt={item.alt}
-                    loading={copy === 0 ? "eager" : "lazy"}
-                    decoding="async"
-                    draggable="false"
-                    onContextMenu={preventMediaSave}
-                    onDragStart={preventMediaSave}
-                  />
-                  <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
-                </figure>
-              ))}
-            </div>
-          ))}
-        </div>
+        {loopCopies.map((copy) => (
+          <div
+            className="rail-loop-set"
+            data-loop-set={copy === 0 ? "base" : undefined}
+            aria-hidden={copy === 0 ? undefined : true}
+            key={copy}
+          >
+            {bloopers.map((item, index) => (
+              <figure
+                style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
+                key={`${copy}-${item.src}`}
+              >
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                  loading={copy === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  draggable="false"
+                  onContextMenu={preventMediaSave}
+                  onDragStart={preventMediaSave}
+                />
+                <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
+              </figure>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );

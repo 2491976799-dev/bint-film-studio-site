@@ -774,15 +774,17 @@ button {
 .blooper-rail {
   position: relative;
   z-index: 1;
-  display: block;
+  display: flex;
   gap: clamp(18px, 2vw, 28px);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   padding: 0 max(22px, calc((100vw - var(--max)) / 2));
   scroll-padding-inline: max(22px, calc((100vw - var(--max)) / 2));
   scroll-snap-type: none;
   scrollbar-width: none;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .works-rail.is-dragging,
@@ -806,14 +808,6 @@ button {
   display: flex;
   flex: 0 0 max-content;
   gap: inherit;
-}
-
-.rail-track {
-  display: flex;
-  width: max-content;
-  height: 100%;
-  gap: inherit;
-  will-change: transform;
 }
 
 .works-rail::-webkit-scrollbar,
