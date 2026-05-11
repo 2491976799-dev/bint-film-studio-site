@@ -774,17 +774,15 @@ button {
 .blooper-rail {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: block;
   gap: clamp(18px, 2vw, 28px);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   padding: 0 max(22px, calc((100vw - var(--max)) / 2));
   scroll-padding-inline: max(22px, calc((100vw - var(--max)) / 2));
   scroll-snap-type: none;
   scrollbar-width: none;
   cursor: grab;
-  touch-action: pan-x pan-y;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .works-rail.is-dragging,
@@ -804,20 +802,16 @@ button {
   min-height: 320px;
 }
 
-.rail-loop-set {
-  display: flex;
-  flex: 0 0 max-content;
-  gap: inherit;
-}
-
 .works-rail::-webkit-scrollbar,
 .blooper-rail::-webkit-scrollbar {
   display: none;
 }
 
 .work-card {
-  position: relative;
-  flex: 0 0 min(820px, 78vw);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(820px, 78vw);
   height: 58.5vw;
   max-height: 615px;
   min-height: 340px;
@@ -828,6 +822,7 @@ button {
   scroll-snap-align: none;
   -webkit-touch-callout: none;
   user-select: none;
+  will-change: transform;
 }
 
 .work-card::after,
@@ -883,8 +878,10 @@ button {
 }
 
 .blooper-rail figure {
-  position: relative;
-  flex: 0 0 min(390px, 42vw);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(390px, 42vw);
   height: 101.4vw;
   max-height: 520px;
   min-height: 320px;
@@ -894,6 +891,7 @@ button {
   aspect-ratio: 3 / 4;
   -webkit-touch-callout: none;
   user-select: none;
+  will-change: transform;
 }
 
 .blooper-rail img {
@@ -1590,10 +1588,6 @@ button {
     scroll-padding-inline: 18px;
   }
 
-  .rail-loop-set {
-    gap: inherit;
-  }
-
   .floating-contact {
     right: 14px;
     top: 30vh;
@@ -1676,7 +1670,7 @@ button {
   }
 
   .work-card {
-    flex-basis: 86vw;
+    width: 86vw;
     height: 64.5vw;
     min-height: 64vw;
   }
@@ -1686,7 +1680,7 @@ button {
   }
 
   .blooper-rail figure {
-    flex-basis: 76vw;
+    width: 76vw;
     height: 101.4vw;
   }
 
