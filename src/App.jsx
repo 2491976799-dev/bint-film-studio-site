@@ -388,11 +388,12 @@ function preventMediaSave(event) {
   event.preventDefault();
 }
 
-function useAutoScroller(defaultSpeed = 0.7) {
+function useInfiniteTrack(defaultSpeed = 0.7) {
   const railRef = useRef(null);
   const targetSpeedRef = useRef(defaultSpeed);
   const currentSpeedRef = useRef(defaultSpeed);
-  const initializedRef = useRef(false);
+  const offsetRef = useRef(0);
+  const boostResetRef = useRef(0);
 
   const getDefaultSpeed = () => {
     if (typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches) {
@@ -404,36 +405,33 @@ function useAutoScroller(defaultSpeed = 0.7) {
 
   const getLoopMetrics = () => {
     const rail = railRef.current;
+    const track = rail?.querySelector("[data-loop-track]");
     const baseSet = rail?.querySelector('[data-loop-set="base"]');
-    if (!rail || !baseSet) return null;
+    if (!rail || !track || !baseSet) return null;
 
-    const styles = window.getComputedStyle(rail);
+    const styles = window.getComputedStyle(track);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     return {
-      start: baseSet.offsetLeft,
+      track,
       width: baseSet.getBoundingClientRect().width + gap,
     };
   };
 
-  const normalizeLoopPosition = () => {
-    const rail = railRef.current;
+  const applyTrackPosition = () => {
     const metrics = getLoopMetrics();
-    if (!rail || !metrics || metrics.width <= 0) return;
-    const { start, width } = metrics;
+    if (!metrics || metrics.width <= 0) return;
+    const { track, width } = metrics;
 
-    if (!initializedRef.current) {
-      rail.scrollLeft = start;
-      initializedRef.current = true;
-      return;
-    }
+    offsetRef.current = ((offsetRef.current % width) + width) % width;
+    track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+  };
 
-    const relativeLeft = rail.scrollLeft - start;
-
-    if (relativeLeft < 0) {
-      rail.scrollLeft += width * (Math.floor(Math.abs(relativeLeft) / width) + 1);
-    } else if (relativeLeft >= width) {
-      rail.scrollLeft -= width * Math.floor(relativeLeft / width);
-    }
+  const resetTrack = () => {
+    const speed = getDefaultSpeed();
+    targetSpeedRef.current = speed;
+    currentSpeedRef.current = speed;
+    offsetRef.current = 0;
+    applyTrackPosition();
   };
 
   useEffect(() => {
@@ -441,30 +439,22 @@ function useAutoScroller(defaultSpeed = 0.7) {
     let lastTime = performance.now();
     let resizeFrameId = 0;
 
-    const resetLoop = () => {
-      const speed = getDefaultSpeed();
-      targetSpeedRef.current = speed;
-      currentSpeedRef.current = speed;
-      initializedRef.current = false;
+    const resetOnResize = () => {
       cancelAnimationFrame(resizeFrameId);
-      resizeFrameId = requestAnimationFrame(normalizeLoopPosition);
+      resizeFrameId = requestAnimationFrame(resetTrack);
     };
 
-    resetLoop();
+    resetTrack();
 
     const tick = (time) => {
-      const rail = railRef.current;
-      if (rail) {
-        const delta = Math.min(32, time - lastTime);
+      const delta = Math.min(32, time - lastTime);
+      const metrics = getLoopMetrics();
 
-        normalizeLoopPosition();
-
-        if (rail.scrollWidth > rail.clientWidth) {
-          currentSpeedRef.current +=
-            (targetSpeedRef.current - currentSpeedRef.current) * 0.045;
-          rail.scrollLeft += currentSpeedRef.current * delta;
-          normalizeLoopPosition();
-        }
+      if (metrics && metrics.width > 0) {
+        currentSpeedRef.current +=
+          (targetSpeedRef.current - currentSpeedRef.current) * 0.045;
+        offsetRef.current += currentSpeedRef.current * delta;
+        applyTrackPosition();
       }
 
       lastTime = time;
@@ -472,11 +462,12 @@ function useAutoScroller(defaultSpeed = 0.7) {
     };
 
     frameId = requestAnimationFrame(tick);
-    window.addEventListener("resize", resetLoop);
+    window.addEventListener("resize", resetOnResize);
     return () => {
       cancelAnimationFrame(frameId);
       cancelAnimationFrame(resizeFrameId);
-      window.removeEventListener("resize", resetLoop);
+      window.clearTimeout(boostResetRef.current);
+      window.removeEventListener("resize", resetOnResize);
     };
   }, []);
 
@@ -495,15 +486,12 @@ function useAutoScroller(defaultSpeed = 0.7) {
   };
 
   const scrollRail = (direction) => {
-    const rail = railRef.current;
-    if (!rail) return;
     const baseSpeed = getDefaultSpeed();
-    normalizeLoopPosition();
-    targetSpeedRef.current = direction * baseSpeed * 1.8;
-    rail.scrollBy({
-      left: direction * Math.max(rail.clientWidth * 0.48, 220),
-      behavior: "smooth",
-    });
+    window.clearTimeout(boostResetRef.current);
+    targetSpeedRef.current = direction * baseSpeed * 4;
+    boostResetRef.current = window.setTimeout(() => {
+      targetSpeedRef.current = baseSpeed;
+    }, 520);
   };
 
   return {
@@ -788,8 +776,8 @@ function Clients() {
 }
 
 function SelectedWorks() {
-  const { railRef, railProps, scrollRail } = useAutoScroller(0.18);
-  const loopCopies = [-1, 0, 1];
+  const { railRef, railProps, scrollRail } = useInfiniteTrack(0.18);
+  const loopCopies = [0, 1];
 
   return (
     <section className="works-section" id="works" style={{ minHeight: "auto" }}>
@@ -812,42 +800,44 @@ function SelectedWorks() {
         style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
         {...railProps}
       >
-        {loopCopies.map((copy) => (
-          <div
-            className="rail-loop-set"
-            data-loop-set={copy === 0 ? "base" : undefined}
-            aria-hidden={copy === 0 ? undefined : true}
-            key={copy}
-          >
-            {works.map((work, index) => (
-              <figure
-                className="work-card"
-                style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
-                key={`${copy}-${work.src}`}
-              >
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <img
-                  src={work.src}
-                  alt={work.alt}
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
-                  draggable="false"
-                  onContextMenu={preventMediaSave}
-                  onDragStart={preventMediaSave}
-                />
-              </figure>
-            ))}
-          </div>
-        ))}
+        <div className="rail-track" data-loop-track>
+          {loopCopies.map((copy) => (
+            <div
+              className="rail-loop-set"
+              data-loop-set={copy === 0 ? "base" : undefined}
+              aria-hidden={copy === 0 ? undefined : true}
+              key={copy}
+            >
+              {works.map((work, index) => (
+                <figure
+                  className="work-card"
+                  style={{ height: "58.5vw", maxHeight: "615px", minHeight: "340px" }}
+                  key={`${copy}-${work.src}`}
+                >
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <img
+                    src={work.src}
+                    alt={work.alt}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
+                    draggable="false"
+                    onContextMenu={preventMediaSave}
+                    onDragStart={preventMediaSave}
+                  />
+                </figure>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
 }
 
 function Bloopers() {
-  const { railRef, railProps, scrollRail } = useAutoScroller(0.14);
-  const loopCopies = [-1, 0, 1];
+  const { railRef, railProps, scrollRail } = useInfiniteTrack(0.14);
+  const loopCopies = [0, 1];
 
   return (
     <section className="bloopers-section" id="bloopers" style={{ minHeight: "auto" }}>
@@ -870,32 +860,34 @@ function Bloopers() {
         style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
         {...railProps}
       >
-        {loopCopies.map((copy) => (
-          <div
-            className="rail-loop-set"
-            data-loop-set={copy === 0 ? "base" : undefined}
-            aria-hidden={copy === 0 ? undefined : true}
-            key={copy}
-          >
-            {bloopers.map((item, index) => (
-              <figure
-                style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
-                key={`${copy}-${item.src}`}
-              >
-                <img
-                  src={item.src}
-                  alt={item.alt}
-                  loading={copy === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                  draggable="false"
-                  onContextMenu={preventMediaSave}
-                  onDragStart={preventMediaSave}
-                />
-                <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
-              </figure>
-            ))}
-          </div>
-        ))}
+        <div className="rail-track" data-loop-track>
+          {loopCopies.map((copy) => (
+            <div
+              className="rail-loop-set"
+              data-loop-set={copy === 0 ? "base" : undefined}
+              aria-hidden={copy === 0 ? undefined : true}
+              key={copy}
+            >
+              {bloopers.map((item, index) => (
+                <figure
+                  style={{ height: "101.4vw", maxHeight: "520px", minHeight: "320px" }}
+                  key={`${copy}-${item.src}`}
+                >
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    loading={copy === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    draggable="false"
+                    onContextMenu={preventMediaSave}
+                    onDragStart={preventMediaSave}
+                  />
+                  <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
+                </figure>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

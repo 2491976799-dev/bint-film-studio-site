@@ -774,14 +774,15 @@ button {
 .blooper-rail {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: block;
   gap: clamp(18px, 2vw, 28px);
-  overflow-x: auto;
+  overflow: hidden;
   padding: 0 max(22px, calc((100vw - var(--max)) / 2));
   scroll-padding-inline: max(22px, calc((100vw - var(--max)) / 2));
   scroll-snap-type: none;
   scrollbar-width: none;
   cursor: ew-resize;
+  touch-action: pan-y;
 }
 
 .works-rail {
@@ -800,6 +801,14 @@ button {
   display: flex;
   flex: 0 0 max-content;
   gap: inherit;
+}
+
+.rail-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  gap: inherit;
+  will-change: transform;
 }
 
 .works-rail::-webkit-scrollbar,
