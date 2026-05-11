@@ -23,8 +23,10 @@ function getTransitionAudioVolume(currentTime, duration = 1) {
 function SplashCover({ onEnter, exiting }) {
   const coverRef = useRef(null);
   const transitionVideoRef = useRef(null);
+  const transitionAudioRef = useRef(null);
   const transitionCanvasRef = useRef(null);
   const transitionFrameRef = useRef(0);
+  const transitionAudioFrameRef = useRef(0);
   const motionCleanupRef = useRef(null);
   const motionRequestedRef = useRef(false);
 
@@ -129,13 +131,6 @@ function SplashCover({ onEnter, exiting }) {
     const drawCoverFrame = () => {
       if (stopped || !context) return;
 
-      if (!transitionVideo.muted) {
-        transitionVideo.volume = getTransitionAudioVolume(
-          transitionVideo.currentTime,
-          transitionVideo.duration
-        );
-      }
-
       if (transitionVideo.readyState >= 2 && transitionVideo.videoWidth && transitionVideo.videoHeight) {
         resizeCanvas();
 
@@ -223,36 +218,61 @@ function SplashCover({ onEnter, exiting }) {
       transitionFrameRef.current = window.requestAnimationFrame(drawCoverFrame);
     };
 
+    transitionVideo.muted = true;
     if (transitionVideo.paused) {
-      transitionVideo.volume = getTransitionAudioVolume(0, transitionVideo.duration);
-      transitionVideo.muted = false;
       transitionVideo.currentTime = 0;
-      transitionVideo.play().then(startDrawing).catch(() => {
-        transitionVideo.muted = true;
-        transitionVideo.play().then(startDrawing).catch(startDrawing);
-      });
+      transitionVideo.play().then(startDrawing).catch(startDrawing);
     } else {
       startDrawing();
     }
 
     return () => {
       stopped = true;
-      transitionVideo.volume = 0;
       window.cancelAnimationFrame(transitionFrameRef.current);
       context?.clearRect(0, 0, transitionCanvas.width, transitionCanvas.height);
     };
   }, [exiting]);
 
+  useEffect(() => {
+    return () => {
+      const transitionAudio = transitionAudioRef.current;
+      window.cancelAnimationFrame(transitionAudioFrameRef.current);
+      if (transitionAudio) {
+        transitionAudio.volume = 0;
+        transitionAudio.pause();
+      }
+    };
+  }, []);
+
+  const updateTransitionAudio = () => {
+    const transitionAudio = transitionAudioRef.current;
+    if (!transitionAudio || transitionAudio.paused || transitionAudio.ended) return;
+
+    transitionAudio.volume = getTransitionAudioVolume(
+      transitionAudio.currentTime,
+      transitionAudio.duration
+    );
+
+    transitionAudioFrameRef.current = window.requestAnimationFrame(updateTransitionAudio);
+  };
+
   const playTransitionMedia = () => {
     const transitionVideo = transitionVideoRef.current;
-    if (!transitionVideo) return;
+    const transitionAudio = transitionAudioRef.current;
 
-    transitionVideo.volume = getTransitionAudioVolume(0, transitionVideo.duration);
-    transitionVideo.muted = false;
-    transitionVideo.currentTime = 0;
-    transitionVideo.play().catch(() => {
+    if (transitionVideo) {
       transitionVideo.muted = true;
+      transitionVideo.currentTime = 0;
       transitionVideo.play().catch(() => {});
+    }
+
+    if (!transitionAudio) return;
+
+    window.cancelAnimationFrame(transitionAudioFrameRef.current);
+    transitionAudio.volume = getTransitionAudioVolume(0, transitionAudio.duration);
+    transitionAudio.currentTime = 0;
+    transitionAudio.play().then(updateTransitionAudio).catch(() => {
+      transitionAudio.volume = 0;
     });
   };
 
@@ -325,7 +345,14 @@ function SplashCover({ onEnter, exiting }) {
           ref={transitionVideoRef}
           className="film-transition-source"
           src={filmTransitionVideo}
+          muted
           playsInline
+          preload="auto"
+        />
+        <audio
+          ref={transitionAudioRef}
+          className="film-transition-source"
+          src={filmTransitionVideo}
           preload="auto"
         />
       </div>
@@ -942,8 +969,8 @@ export default function App() {
     if (entered || splashExiting) return;
     setSplashExiting(true);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "instant" }));
-    window.setTimeout(() => setEntered(true), 470);
-    window.setTimeout(() => setShowSplash(false), 940);
+    window.setTimeout(() => setEntered(true), 520);
+    window.setTimeout(() => setShowSplash(false), 1040);
   };
 
   return (
