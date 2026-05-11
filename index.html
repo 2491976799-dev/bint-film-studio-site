@@ -19,41 +19,71 @@
       property="og:description"
       content="以山城为原点，用影像创造价值。BINT Film Studio 有神無迹影视。"
     />
-    <meta property="og:image" content="https://yswfjilm.top/share-card-v2.png" />
-    <meta property="og:image:url" content="https://yswfjilm.top/share-card-v2.png" />
-    <meta property="og:image:secure_url" content="https://yswfjilm.top/share-card-v2.png" />
+    <meta property="og:image" content="https://yswfjilm.top/share-card-v3.png" />
+    <meta property="og:image:url" content="https://yswfjilm.top/share-card-v3.png" />
+    <meta property="og:image:secure_url" content="https://yswfjilm.top/share-card-v3.png" />
     <meta property="og:image:alt" content="YSWJ" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="1200" />
     <meta itemprop="name" content="BINT有神無迹影视 | BINT Film Studio" />
     <meta itemprop="description" content="以山城为原点，用影像创造价值。BINT Film Studio 有神無迹影视。" />
-    <meta itemprop="image" content="https://yswfjilm.top/share-card-v2.png" />
-    <meta name="thumbnail" content="https://yswfjilm.top/share-card-v2.png" />
+    <meta itemprop="image" content="https://yswfjilm.top/share-card-v3.png" />
+    <meta name="thumbnail" content="https://yswfjilm.top/share-card-v3.png" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="BINT有神無迹影视 | BINT Film Studio" />
     <meta name="twitter:description" content="以山城为原点，用影像创造价值。BINT Film Studio 有神無迹影视。" />
-    <meta name="twitter:image" content="https://yswfjilm.top/share-card-v2.png" />
-    <link rel="image_src" href="https://yswfjilm.top/share-card-v2.png" />
+    <meta name="twitter:image" content="https://yswfjilm.top/share-card-v3.png" />
+    <link rel="image_src" href="https://yswfjilm.top/share-card-v3.png" />
+    <link rel="apple-touch-icon" href="https://yswfjilm.top/share-card-v3.png" />
+    <script>
+      (function () {
+        var shareData = {
+          title: "BINT有神無迹影视 | BINT Film Studio",
+          desc: "以山城为原点，用影像创造价值。BINT Film Studio 有神無迹影视。",
+          link: "https://yswfjilm.top/",
+          imgUrl: "https://yswfjilm.top/share-card-v3.png",
+          img_url: "https://yswfjilm.top/share-card-v3.png",
+        };
+
+        function bindWeChatShare() {
+          if (!window.WeixinJSBridge) return;
+          window.WeixinJSBridge.on("menu:share:timeline", function () {
+            window.WeixinJSBridge.invoke("shareTimeline", shareData, function () {});
+          });
+          window.WeixinJSBridge.on("menu:share:appmessage", function () {
+            window.WeixinJSBridge.invoke("sendAppMessage", shareData, function () {});
+          });
+        }
+
+        if (typeof window.WeixinJSBridge === "undefined") {
+          document.addEventListener("WeixinJSBridgeReady", bindWeChatShare, false);
+        } else {
+          bindWeChatShare();
+        }
+      })();
+    </script>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="./site.webmanifest" />
     <style>
       .wechat-share-thumb {
         position: absolute;
         top: 0;
-        left: -9999px;
+        left: 0;
         width: 300px;
         height: 300px;
-        opacity: 0.01;
+        opacity: 0.003;
         object-fit: cover;
         pointer-events: none;
+        user-select: none;
+        -webkit-user-drag: none;
       }
     </style>
   </head>
   <body>
     <img
       class="wechat-share-thumb"
-      src="https://yswfjilm.top/share-card-v2.png"
+      src="https://yswfjilm.top/share-card-v3.png"
       alt="YSWJ"
       width="300"
       height="300"

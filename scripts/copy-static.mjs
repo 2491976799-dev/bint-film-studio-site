@@ -10,6 +10,7 @@ const files = [
   "robots.txt",
   "share-card.png",
   "share-card-v2.png",
+  "share-card-v3.png",
   "site.webmanifest",
 ];
 

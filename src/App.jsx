@@ -384,6 +384,10 @@ function copyTextToClipboard(text, onSuccess, onError) {
   }
 }
 
+function preventMediaSave(event) {
+  event.preventDefault();
+}
+
 function useAutoScroller(defaultSpeed = 0.7) {
   const railRef = useRef(null);
   const targetSpeedRef = useRef(defaultSpeed);
@@ -423,10 +427,12 @@ function useAutoScroller(defaultSpeed = 0.7) {
       return;
     }
 
-    if (rail.scrollLeft <= start - width * 0.5) {
-      rail.scrollLeft += width;
-    } else if (rail.scrollLeft >= start + width * 0.5) {
-      rail.scrollLeft -= width;
+    const relativeLeft = rail.scrollLeft - start;
+
+    if (relativeLeft < 0) {
+      rail.scrollLeft += width * (Math.floor(Math.abs(relativeLeft) / width) + 1);
+    } else if (relativeLeft >= width) {
+      rail.scrollLeft -= width * Math.floor(relativeLeft / width);
     }
   };
 
@@ -505,6 +511,8 @@ function useAutoScroller(defaultSpeed = 0.7) {
     railProps: {
       onPointerMove,
       onPointerLeave,
+      onContextMenu: preventMediaSave,
+      onDragStart: preventMediaSave,
     },
     scrollRail,
   };
@@ -609,25 +617,11 @@ function Services() {
 }
 
 function ClientLogoSphere() {
-  const [angle, setAngle] = useState(0);
+  const logoNodesRef = useRef([]);
+  const angleRef = useRef(0);
   const targetSpeedRef = useRef(-0.00034);
   const currentSpeedRef = useRef(-0.00034);
   const frameRef = useRef(0);
-
-  useEffect(() => {
-    let lastTime = performance.now();
-
-    const tick = (time) => {
-      const delta = Math.min(32, time - lastTime);
-      currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * 0.026;
-      setAngle((current) => current + currentSpeedRef.current * delta);
-      lastTime = time;
-      frameRef.current = requestAnimationFrame(tick);
-    };
-
-    frameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, []);
 
   const updateSpeed = (event) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -665,18 +659,6 @@ function ClientLogoSphere() {
     medium: "clamp(56px, 6.2vw, 88px)",
     tall: "clamp(64px, 7vw, 100px)",
   };
-  const frameWidthMap = {
-    hero: "300px",
-    wide: "230px",
-    medium: "200px",
-    tall: "184px",
-  };
-  const frameMaxHeightMap = {
-    hero: "112px",
-    wide: "88px",
-    medium: "88px",
-    tall: "100px",
-  };
   const mobileWidthMap = {
     hero: "27.78vw",
     wide: "21.3vw",
@@ -690,6 +672,34 @@ function ClientLogoSphere() {
     tall: "9.26vw",
   };
 
+  const getLogoStyle = (logo, row, rowIndex, position, angleValue) => {
+    const theta =
+      angleValue + row.phase * Math.PI * 2 + (position / row.logos.length) * Math.PI * 2;
+    const baseX = Math.cos(theta) * row.radius;
+    const depth = Math.sin(theta) * row.radius;
+    const projectedX = baseX * 40;
+    const projectedMobileX = baseX * 31;
+    const projectedY = row.y;
+    const edgeFade = Math.max(0, 1 - Math.abs(baseX) * 0.18);
+    const frontFade = smoothStep(-0.36, 0.42, depth);
+    const opacity = Math.min(1, edgeFade * frontFade);
+    const logoScale = (logo.size ?? 1) * (0.96 + Math.max(0, depth) * 0.18);
+
+    return {
+      "--logo-x": `${projectedX}%`,
+      "--logo-mobile-x": `${projectedMobileX}%`,
+      "--logo-y": `${projectedY}%`,
+      "--logo-depth": `${Math.round(depth * 78)}px`,
+      "--logo-scale": logoScale.toFixed(3),
+      "--logo-opacity": opacity.toFixed(3),
+      "--logo-z": Math.round(100 + (depth + 1) * 40 + (4 - rowIndex)),
+      "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
+      "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
+      "--logo-mobile-width": mobileWidthMap[logo.shape] ?? mobileWidthMap.medium,
+      "--logo-mobile-max-height": mobileMaxHeightMap[logo.shape] ?? mobileMaxHeightMap.medium,
+    };
+  };
+
   const items = latitudeRows.flatMap((row, rowIndex) => {
     return row.logos
       .map((logoIndex, position) => {
@@ -699,41 +709,47 @@ function ClientLogoSphere() {
           return null;
         }
 
-        const theta = angle + row.phase * Math.PI * 2 + (position / row.logos.length) * Math.PI * 2;
-        const baseX = Math.cos(theta) * row.radius;
-        const depth = Math.sin(theta) * row.radius;
-        const projectedX = baseX * 40;
-        const projectedMobileX = baseX * 31;
-        const projectedY = row.y;
-        const edgeFade = Math.max(0, 1 - Math.abs(baseX) * 0.18);
-        const frontFade = smoothStep(-0.36, 0.42, depth);
-        const opacity = Math.min(1, edgeFade * frontFade);
-        const logoScale = (logo.size ?? 1) * (0.96 + Math.max(0, depth) * 0.18);
-
         return {
           ...logo,
           key: `${logo.name}-${rowIndex}-${position}`,
-          style: {
-            "--logo-x": `${projectedX}%`,
-            "--logo-mobile-x": `${projectedMobileX}%`,
-            "--logo-y": `${projectedY}%`,
-            "--logo-depth": `${Math.round(depth * 78)}px`,
-            "--logo-scale": logoScale.toFixed(3),
-            "--logo-opacity": opacity.toFixed(3),
-            "--logo-z": Math.round(100 + (depth + 1) * 40 + (4 - rowIndex)),
-            "--logo-width": widthMap[logo.shape] ?? widthMap.medium,
-            "--logo-max-height": maxHeightMap[logo.shape] ?? maxHeightMap.medium,
-            "--logo-frame-width": frameWidthMap[logo.shape] ?? frameWidthMap.medium,
-            "--logo-frame-max-height":
-              frameMaxHeightMap[logo.shape] ?? frameMaxHeightMap.medium,
-            "--logo-mobile-width": mobileWidthMap[logo.shape] ?? mobileWidthMap.medium,
-            "--logo-mobile-max-height":
-              mobileMaxHeightMap[logo.shape] ?? mobileMaxHeightMap.medium,
-          },
+          row,
+          rowIndex,
+          position,
+          style: getLogoStyle(logo, row, rowIndex, position, 0),
         };
       })
       .filter(Boolean);
   });
+
+  const renderLogos = (angleValue) => {
+    items.forEach((logo, index) => {
+      const node = logoNodesRef.current[index];
+      if (!node) return;
+
+      const nextStyle = getLogoStyle(logo, logo.row, logo.rowIndex, logo.position, angleValue);
+      Object.entries(nextStyle).forEach(([property, value]) => {
+        node.style.setProperty(property, value);
+      });
+    });
+  };
+
+  useEffect(() => {
+    let lastTime = performance.now();
+
+    renderLogos(angleRef.current);
+
+    const tick = (time) => {
+      const delta = Math.min(32, time - lastTime);
+      currentSpeedRef.current += (targetSpeedRef.current - currentSpeedRef.current) * 0.026;
+      angleRef.current += currentSpeedRef.current * delta;
+      renderLogos(angleRef.current);
+      lastTime = time;
+      frameRef.current = requestAnimationFrame(tick);
+    };
+
+    frameRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, []);
 
   return (
     <div
@@ -743,9 +759,16 @@ function ClientLogoSphere() {
       onPointerLeave={resetSpeed}
     >
       <div className="sphere-core" aria-hidden="true" />
-      {items.map((logo) => (
-        <figure className="sphere-logo" key={logo.key} style={logo.style}>
-          <img src={logo.src} alt={logo.name} loading="lazy" />
+      {items.map((logo, index) => (
+        <figure
+          className="sphere-logo"
+          key={logo.key}
+          ref={(node) => {
+            logoNodesRef.current[index] = node;
+          }}
+          style={logo.style}
+        >
+          <img src={logo.src} alt={logo.name} loading="eager" decoding="async" draggable="false" />
         </figure>
       ))}
     </div>
@@ -809,6 +832,9 @@ function SelectedWorks() {
                   loading="eager"
                   decoding="async"
                   fetchPriority={copy === 0 && index < 5 ? "high" : "auto"}
+                  draggable="false"
+                  onContextMenu={preventMediaSave}
+                  onDragStart={preventMediaSave}
                 />
               </figure>
             ))}
@@ -861,6 +887,9 @@ function Bloopers() {
                   alt={item.alt}
                   loading={copy === 0 ? "eager" : "lazy"}
                   decoding="async"
+                  draggable="false"
+                  onContextMenu={preventMediaSave}
+                  onDragStart={preventMediaSave}
                 />
                 <figcaption>{String(index + 1).padStart(2, "0")}</figcaption>
               </figure>

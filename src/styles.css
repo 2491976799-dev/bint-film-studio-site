@@ -701,7 +701,6 @@ button {
     translate3d(-50%, -50%, var(--logo-depth, 0px))
     scale(var(--logo-scale));
   transform-origin: center;
-  transition: opacity 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform, opacity;
   backface-visibility: hidden;
   pointer-events: none;
@@ -819,11 +818,25 @@ button {
   overflow: hidden;
   background: #d8d8d8;
   scroll-snap-align: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.work-card::after,
+.blooper-rail figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: transparent;
+  pointer-events: auto;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .work-card span {
   position: absolute;
-  z-index: 2;
+  z-index: 5;
   top: 18px;
   left: 18px;
   display: grid;
@@ -841,6 +854,10 @@ button {
   height: 100%;
   object-fit: cover;
   transition: transform 900ms ease;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .work-card:hover img {
@@ -867,12 +884,18 @@ button {
   overflow: hidden;
   background: #d8d8d8;
   aspect-ratio: 3 / 4;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .blooper-rail img {
   height: 100%;
   object-fit: cover;
   transition: transform 900ms ease;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .blooper-rail figure:hover img {
@@ -881,6 +904,7 @@ button {
 
 .blooper-rail figcaption {
   position: absolute;
+  z-index: 5;
   left: 14px;
   bottom: 14px;
   color: #fff;

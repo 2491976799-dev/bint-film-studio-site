@@ -36,25 +36,25 @@ const clientLogoMeta = [
   { name: "阿里云", size: 1, shape: "wide" },
 ];
 
-import work01 from "../assets/works-selected/work-01.webp";
-import work02 from "../assets/works-selected/work-02.webp";
-import work03 from "../assets/works-selected/work-03.webp";
-import work04 from "../assets/works-selected/work-04.webp";
-import work05 from "../assets/works-selected/work-05.webp";
-import work06 from "../assets/works-selected/work-06.webp";
-import work07 from "../assets/works-selected/work-07.webp";
-import work08 from "../assets/works-selected/work-08.webp";
-import work09 from "../assets/works-selected/work-09.webp";
-import work10 from "../assets/works-selected/work-10.webp";
-import work11 from "../assets/works-selected/work-11.webp";
-import work12 from "../assets/works-selected/work-12.webp";
-import work13 from "../assets/works-selected/work-13.webp";
-import work14 from "../assets/works-selected/work-14.webp";
-import work15 from "../assets/works-selected/work-15.webp";
+import work01 from "../assets/works-protected/work-01.webp";
+import work02 from "../assets/works-protected/work-02.webp";
+import work03 from "../assets/works-protected/work-03.webp";
+import work04 from "../assets/works-protected/work-04.webp";
+import work05 from "../assets/works-protected/work-05.webp";
+import work06 from "../assets/works-protected/work-06.webp";
+import work07 from "../assets/works-protected/work-07.webp";
+import work08 from "../assets/works-protected/work-08.webp";
+import work09 from "../assets/works-protected/work-09.webp";
+import work10 from "../assets/works-protected/work-10.webp";
+import work11 from "../assets/works-protected/work-11.webp";
+import work12 from "../assets/works-protected/work-12.webp";
+import work13 from "../assets/works-protected/work-13.webp";
+import work14 from "../assets/works-protected/work-14.webp";
+import work15 from "../assets/works-protected/work-15.webp";
 
-import blooper01 from "../assets/bloopers/blooper-01.webp";
-import blooper02 from "../assets/bloopers/blooper-02.webp";
-import blooper03 from "../assets/bloopers/blooper-03.webp";
+import blooper01 from "../assets/bloopers-protected/blooper-01.webp";
+import blooper02 from "../assets/bloopers-protected/blooper-02.webp";
+import blooper03 from "../assets/bloopers-protected/blooper-03.webp";
 
 export const studio = {
   coverImage,
