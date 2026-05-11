@@ -390,31 +390,43 @@ function useAutoScroller(defaultSpeed = 0.7) {
   const currentSpeedRef = useRef(defaultSpeed);
   const initializedRef = useRef(false);
 
-  const getLoopWidth = () => {
+  const getDefaultSpeed = () => {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 560px)").matches) {
+      return defaultSpeed * 0.58;
+    }
+
+    return defaultSpeed;
+  };
+
+  const getLoopMetrics = () => {
     const rail = railRef.current;
     const baseSet = rail?.querySelector('[data-loop-set="base"]');
-    if (!rail || !baseSet) return 0;
+    if (!rail || !baseSet) return null;
 
     const styles = window.getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
-    return baseSet.getBoundingClientRect().width + gap;
+    return {
+      start: baseSet.offsetLeft,
+      width: baseSet.getBoundingClientRect().width + gap,
+    };
   };
 
   const normalizeLoopPosition = () => {
     const rail = railRef.current;
-    const loopWidth = getLoopWidth();
-    if (!rail || loopWidth <= 0) return;
+    const metrics = getLoopMetrics();
+    if (!rail || !metrics || metrics.width <= 0) return;
+    const { start, width } = metrics;
 
     if (!initializedRef.current) {
-      rail.scrollLeft = loopWidth;
+      rail.scrollLeft = start;
       initializedRef.current = true;
       return;
     }
 
-    if (rail.scrollLeft <= loopWidth * 0.02) {
-      rail.scrollLeft += loopWidth;
-    } else if (rail.scrollLeft >= loopWidth * 1.98) {
-      rail.scrollLeft -= loopWidth;
+    if (rail.scrollLeft <= start - width * 0.5) {
+      rail.scrollLeft += width;
+    } else if (rail.scrollLeft >= start + width * 0.5) {
+      rail.scrollLeft -= width;
     }
   };
 
@@ -424,10 +436,15 @@ function useAutoScroller(defaultSpeed = 0.7) {
     let resizeFrameId = 0;
 
     const resetLoop = () => {
+      const speed = getDefaultSpeed();
+      targetSpeedRef.current = speed;
+      currentSpeedRef.current = speed;
       initializedRef.current = false;
       cancelAnimationFrame(resizeFrameId);
       resizeFrameId = requestAnimationFrame(normalizeLoopPosition);
     };
+
+    resetLoop();
 
     const tick = (time) => {
       const rail = railRef.current;
@@ -458,23 +475,25 @@ function useAutoScroller(defaultSpeed = 0.7) {
   }, []);
 
   const onPointerMove = (event) => {
+    const baseSpeed = getDefaultSpeed();
     const rect = event.currentTarget.getBoundingClientRect();
     const ratio = (event.clientX - rect.left) / rect.width;
     const centered = (ratio - 0.5) * 2;
     const direction = Math.abs(centered) < 0.2 ? 0 : Math.sign(centered);
-    const speed = defaultSpeed * 0.35 + Math.abs(centered) * defaultSpeed * 2.2;
-    targetSpeedRef.current = direction === 0 ? defaultSpeed * 0.18 : direction * speed;
+    const speed = baseSpeed * 0.35 + Math.abs(centered) * baseSpeed * 2.2;
+    targetSpeedRef.current = direction === 0 ? baseSpeed * 0.18 : direction * speed;
   };
 
   const onPointerLeave = () => {
-    targetSpeedRef.current = defaultSpeed;
+    targetSpeedRef.current = getDefaultSpeed();
   };
 
   const scrollRail = (direction) => {
     const rail = railRef.current;
     if (!rail) return;
+    const baseSpeed = getDefaultSpeed();
     normalizeLoopPosition();
-    targetSpeedRef.current = direction * defaultSpeed * 1.8;
+    targetSpeedRef.current = direction * baseSpeed * 1.8;
     rail.scrollBy({
       left: direction * Math.max(rail.clientWidth * 0.48, 220),
       behavior: "smooth",
