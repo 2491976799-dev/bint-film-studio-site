@@ -1603,20 +1603,20 @@ button {
 
   .clients .section-title {
     margin: 0 auto;
-    transform: translateX(-0.24em);
+    transform: none;
   }
 
   .clients .section-title p {
     margin-bottom: clamp(2px, 0.9vw, 6px);
-    font-size: clamp(20px, 4.8vw, 26px);
+    font-size: clamp(18px, 4.2vw, 22px);
   }
 
   .clients .section-title h2 {
-    font-size: clamp(48px, 12.6vw, 64px);
+    font-size: clamp(40px, 10.4vw, 50px);
   }
 
   .client-sphere {
-    width: 112vw;
+    width: 100vw;
     height: clamp(228px, 58vw, 302px);
     margin-inline: auto;
     margin-top: clamp(-12px, -2vw, -6px);
@@ -1630,6 +1630,7 @@ button {
   }
 
   .sphere-logo {
+    left: calc(50% + var(--logo-mobile-x));
     width: var(--logo-mobile-width, 18.52vw);
     min-height: 12.22vw;
     transform:

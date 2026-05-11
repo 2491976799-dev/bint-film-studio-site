@@ -684,6 +684,7 @@ function ClientLogoSphere() {
         const baseX = Math.cos(theta) * row.radius;
         const depth = Math.sin(theta) * row.radius;
         const projectedX = baseX * 40;
+        const projectedMobileX = baseX * 31;
         const projectedY = row.y;
         const edgeFade = Math.max(0, 1 - Math.abs(baseX) * 0.18);
         const frontFade = smoothStep(-0.36, 0.42, depth);
@@ -695,6 +696,7 @@ function ClientLogoSphere() {
           key: `${logo.name}-${rowIndex}-${position}`,
           style: {
             "--logo-x": `${projectedX}%`,
+            "--logo-mobile-x": `${projectedMobileX}%`,
             "--logo-y": `${projectedY}%`,
             "--logo-depth": `${Math.round(depth * 78)}px`,
             "--logo-scale": logoScale.toFixed(3),
