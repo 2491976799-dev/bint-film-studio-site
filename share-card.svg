@@ -1,12 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200">
   <rect width="1200" height="1200" fill="#ffffff"/>
-  <rect x="36" y="36" width="1128" height="1128" fill="none" stroke="#111111" stroke-width="34"/>
-  <text x="600" y="622"
-    fill="#111111"
-    font-family="Arial, Helvetica, sans-serif"
-    font-size="330"
-    font-weight="800"
-    letter-spacing="2"
+  <rect x="244" y="244" width="712" height="712" fill="none" stroke="#050505" stroke-width="48"/>
+  <g
+    fill="#050505"
+    font-family="Arial Black, Helvetica Neue, Arial, sans-serif"
+    font-size="230"
+    font-weight="900"
+    letter-spacing="-4"
     text-anchor="middle"
-    dominant-baseline="middle">YSWJ</text>
+    dominant-baseline="middle">
+    <text x="458" y="460">Y</text>
+    <text x="742" y="460">S</text>
+    <text x="458" y="738">W</text>
+    <text x="742" y="738">J</text>
+  </g>
 </svg>

@@ -11,6 +11,7 @@ const files = [
   "share-card.png",
   "share-card-v2.png",
   "share-card-v3.png",
+  "share-card-v4.png",
   "site.webmanifest",
 ];
 
