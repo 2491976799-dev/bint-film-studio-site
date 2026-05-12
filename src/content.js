@@ -41,7 +41,6 @@ import work02 from "../assets/works-protected/work-02.webp";
 import work03 from "../assets/works-protected/work-03.webp";
 import work04 from "../assets/works-protected/work-04.webp";
 import work05 from "../assets/works-protected/work-05.webp";
-import work06 from "../assets/works-protected/work-06.webp";
 import work07 from "../assets/works-protected/work-07.webp";
 import work08 from "../assets/works-protected/work-08.webp";
 import work09 from "../assets/works-protected/work-09.webp";
@@ -101,7 +100,6 @@ export const works = [
   work03,
   work04,
   work05,
-  work06,
   work07,
   work08,
   work09,
